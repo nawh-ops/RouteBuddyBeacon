@@ -55,4 +55,17 @@ struct BeaconFix {
     var quodWordsCode: String {
         QuodWordsEncoder.encode(self)
     }
+    
+    func asBeaconMessage(deviceID: String = "beacon-ios-dev") -> BeaconMessage {
+        BeaconMessage(
+            deviceID: deviceID,
+            timestamp: timestamp,
+            quodWordsCode: quodWordsCode,
+            latitude: latitude,
+            longitude: longitude,
+            horizontalAccuracy: horizontalAccuracy,
+            speed: speed,
+            course: course
+        )
+    }
 }

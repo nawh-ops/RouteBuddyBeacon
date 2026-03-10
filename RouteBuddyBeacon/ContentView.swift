@@ -63,12 +63,19 @@ struct ContentView: View {
                     .multilineTextAlignment(.center)
 
                     if let fix = locationManager.currentFix {
+                        let message = fix.asBeaconMessage()
+
                         VStack(spacing: 8) {
                             Text("Latitude: \(fix.latitude, specifier: "%.6f")")
                             Text("Longitude: \(fix.longitude, specifier: "%.6f")")
                             Text("Accuracy: \(fix.accuracyDescription)")
                             Text("Timestamp: \(fix.timestamp.formatted())")
                             Text("QuodWords: \(fix.quodWordsCode)")
+                            Text("Device ID: \(message.deviceID)")
+                            Text("Payload keys: \(message.payload.keys.sorted().joined(separator: ", "))")
+                                .font(.footnote)
+                                .multilineTextAlignment(.center)
+                                .foregroundStyle(.secondary)
 
                             if let speedKPH = fix.speedKPH {
                                 Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
@@ -83,6 +90,7 @@ struct ContentView: View {
                         Text("Waiting for location...")
                             .foregroundStyle(.secondary)
                     }
+
                     if let errorMessage = locationManager.errorMessage {
                         Text(errorMessage)
                             .foregroundStyle(.red)
