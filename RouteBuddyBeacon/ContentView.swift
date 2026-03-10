@@ -62,38 +62,27 @@ struct ContentView: View {
                     }
                     .multilineTextAlignment(.center)
 
-                    if let lat = locationManager.latitude,
-                       let lon = locationManager.longitude {
+                    if let fix = locationManager.currentFix {
                         VStack(spacing: 8) {
-                            Text("Latitude: \(lat, specifier: "%.6f")")
-                            Text("Longitude: \(lon, specifier: "%.6f")")
+                            Text("Latitude: \(fix.latitude, specifier: "%.6f")")
+                            Text("Longitude: \(fix.longitude, specifier: "%.6f")")
+                            Text("Accuracy: \(fix.accuracyDescription)")
+                            Text("Timestamp: \(fix.timestamp.formatted())")
+                            Text("QuodWords: \(fix.quodWordsCode)")
 
-                            if let accuracy = locationManager.horizontalAccuracy {
-                                Text("Accuracy: \(accuracy, specifier: "%.1f") m")
-                            }
-
-                            if let time = locationManager.timestamp {
-                                Text("Timestamp: \(time.formatted())")
-                            }
-
-                            if let speed = locationManager.speed {
-                                Text("Speed: \(speed * 3.6, specifier: "%.1f") km/h")
+                            if let speedKPH = fix.speedKPH {
+                                Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
                             } else {
                                 Text("Speed: unavailable")
                             }
 
-                            if let course = locationManager.course {
-                                Text("Course: \(course, specifier: "%.1f")°")
-                            } else {
-                                Text("Course: unavailable")
-                            }
+                            Text("Course: \(fix.courseDescription)")
                         }
                         .font(.title3)
                     } else {
                         Text("Waiting for location...")
                             .foregroundStyle(.secondary)
                     }
-
                     if let errorMessage = locationManager.errorMessage {
                         Text(errorMessage)
                             .foregroundStyle(.red)

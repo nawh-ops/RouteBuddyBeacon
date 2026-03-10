@@ -9,6 +9,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
     @Published var authorizationStatus: CLAuthorizationStatus
     @Published var lastLocation: CLLocation?
+    @Published var currentFix: BeaconFix?
     @Published var latitude: Double?
     @Published var longitude: Double?
     @Published var horizontalAccuracy: Double?
@@ -90,6 +91,16 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
         speed = location.speed >= 0 ? location.speed : nil
         course = location.course >= 0 ? location.course : nil
+        
+        let fix = BeaconFix(
+            coordinate: location.coordinate,
+            horizontalAccuracy: location.horizontalAccuracy,
+            timestamp: location.timestamp,
+            speed: location.speed >= 0 ? location.speed : nil,
+            course: location.course >= 0 ? location.course : nil
+        )
+
+        currentFix = fix
 
         let coordinate = location.coordinate
         let accuracy = location.horizontalAccuracy
