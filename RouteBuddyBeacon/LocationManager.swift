@@ -101,6 +101,9 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         )
 
         currentFix = fix
+        
+        let message = fix.asBeaconMessage()
+        BeaconLogger.log(message)
 
         let coordinate = location.coordinate
         let accuracy = location.horizontalAccuracy
