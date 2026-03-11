@@ -12,7 +12,7 @@ struct ContentView: View {
         VStack(spacing: 0) {
             Map(position: $cameraPosition, interactionModes: .all) {
                 ForEach(Array(locationManager.trackSegments.enumerated()), id: \.offset) { _, segment in
-                    if !segment.isEmpty {
+                    if segment.count > 1 {
                         MapPolyline(coordinates: segment)
                             .stroke(.blue, lineWidth: 4)
                     }
