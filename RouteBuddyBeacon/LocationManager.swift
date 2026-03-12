@@ -19,6 +19,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var latitude: Double?
     @Published var longitude: Double?
     @Published var sessionStats = SessionStats()
+    @Published var recordedLocations: [CLLocation] = []
     @Published var horizontalAccuracy: Double?
     @Published var timestamp: Date?
     @Published var speed: Double?
@@ -96,6 +97,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             recordingState = .recording
             startUpdatingLocation()
             sessionStats.start()
+            recordedLocations = []
         }
 
         func pauseRecording() {
@@ -119,6 +121,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         guard let location = locations.last else { return }
         if recordingState == .recording {
             sessionStats.addLocation(location)
+            recordedLocations.append(location)
         }
 
         lastLocation = location
