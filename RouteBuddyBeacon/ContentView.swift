@@ -4,10 +4,10 @@ import MapKit
 
 struct ContentView: View {
     @StateObject private var locationManager = LocationManager()
-    
+
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var autoFollow = true
-    
+
     var body: some View {
         VStack(spacing: 0) {
             Map(position: $cameraPosition, interactionModes: .all) {
@@ -17,7 +17,7 @@ struct ContentView: View {
                             .stroke(.blue, lineWidth: 4)
                     }
                 }
-                
+
                 if let location = locationManager.lastLocation {
                     Marker("You", coordinate: location.coordinate)
                 }
@@ -35,17 +35,17 @@ struct ContentView: View {
                     updateCameraForFollowMode()
                 }
             }
-            
+
             ScrollView {
                 VStack(spacing: 16) {
                     Text("RouteBuddy Beacon")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                    
+
                     Toggle("Auto-Follow", isOn: $autoFollow)
                         .font(.headline)
                         .padding(.horizontal)
-                    
+
                     Group {
                         switch locationManager.authorizationStatus {
                         case .notDetermined:
@@ -61,10 +61,10 @@ struct ContentView: View {
                         }
                     }
                     .multilineTextAlignment(.center)
-                    
+
                     if let fix = locationManager.currentFix {
                         let message = fix.asBeaconMessage()
-                        
+
                         VStack(spacing: 8) {
                             Text("Latitude: \(fix.latitude, specifier: "%.6f")")
                             Text("Longitude: \(fix.longitude, specifier: "%.6f")")
@@ -76,13 +76,13 @@ struct ContentView: View {
                                 .font(.footnote)
                                 .multilineTextAlignment(.center)
                                 .foregroundStyle(.secondary)
-                            
+
                             if let speedKPH = fix.speedKPH {
                                 Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
                             } else {
                                 Text("Speed: unavailable")
                             }
-                            
+
                             Text("Course: \(fix.courseDescription)")
                         }
                         .font(.title3)
@@ -90,56 +90,64 @@ struct ContentView: View {
                         Text("Waiting for location...")
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     if let errorMessage = locationManager.errorMessage {
                         Text(errorMessage)
                             .foregroundStyle(.red)
                             .multilineTextAlignment(.center)
                     }
-                    
-                    Text("Recording state: \(recordingStateText)")
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
 
-                                        HStack(spacing: 12) {
+                    VStack(spacing: 12) {
+                        Text("Recording state: \(recordingStateText)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-                                            Button("Request Permission") {
-                                                locationManager.requestLocationPermission()
-                                            }
-                                            .buttonStyle(.borderedProminent)
+                        HStack(spacing: 12) {
+                            Button("Request Permission") {
+                                locationManager.requestLocationPermission()
+                            }
+                            .buttonStyle(.borderedProminent)
 
-                                            switch locationManager.recordingState {
+                            switch locationManager.recordingState {
+                            case .idle:
+                                Button("Start Recording") {
+                                    locationManager.startRecording()
+                                }
+                                .buttonStyle(.bordered)
 
-                                            case .idle:
-                                                Button("Start Recording") {
-                                                    locationManager.startRecording()
-                                                }
-                                                .buttonStyle(.bordered)
+                            case .recording:
+                                Button("Pause") {
+                                    locationManager.pauseRecording()
+                                }
+                                .buttonStyle(.bordered)
 
-                                            case .recording:
-                                                Button("Pause") {
-                                                    locationManager.pauseRecording()
-                                                }
-                                                .buttonStyle(.bordered)
+                                Button("Stop") {
+                                    locationManager.stopRecording()
+                                }
+                                .buttonStyle(.borderedProminent)
 
-                                            case .paused:
-                                                Button("Resume") {
-                                                    locationManager.resumeRecording()
-                                                }
-                                                .buttonStyle(.bordered)
+                            case .paused:
+                                Button("Resume") {
+                                    locationManager.resumeRecording()
+                                }
+                                .buttonStyle(.bordered)
 
-                                                Button("Stop") {
-                                                    locationManager.stopRecording()
-                                                }
-                                                .buttonStyle(.borderedProminent)
-                                            }
-                                        }
-                                    }
-                                    .padding()
+                                Button("Stop") {
+                                    locationManager.stopRecording()
+                                }
+                                .buttonStyle(.borderedProminent)
+                            }
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .padding()
             }
         }
     }
-    
+
     private func updateCameraForFollowMode() {
         guard autoFollow else {
             if let location = locationManager.lastLocation {
