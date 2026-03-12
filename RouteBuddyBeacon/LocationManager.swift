@@ -27,6 +27,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var trackSegments: [[CLLocationCoordinate2D]] = []
     @Published var errorMessage: String?
     @Published var recordingState: RecordingState = .idle
+    @Published var exportURL: URL?
+    @Published var shouldShowShareSheet = false
 
     override init() {
         self.authorizationStatus = manager.authorizationStatus
@@ -113,6 +115,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         func stopRecording() {
             recordingState = .idle
             stopUpdatingLocation()
+            exportGPX()
             sessionStats.stop()
         }
     
@@ -204,6 +207,30 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     
     private func totalPointsOfSegments() -> Int {
         trackSegments.reduce(0) { $0 + $1.count }
+    }
+    
+    private func exportGPX() {
+        guard !recordedLocations.isEmpty else {
+            print("GPX EXPORT: no recorded locations")
+            return
+        }
+
+        let gpxString = GPXExporter.generateGPX(from: recordedLocations)
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+
+        let filename = "beacon-track-\(formatter.string(from: Date())).gpx"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+
+        do {
+            try gpxString.write(to: url, atomically: true, encoding: .utf8)
+            exportURL = url
+            shouldShowShareSheet = true
+            print("GPX EXPORT SUCCESS: \(url.path)")
+        } catch {
+            print("GPX EXPORT FAILED: \(error.localizedDescription)")
+        }
     }
     
     func clearTrack() {

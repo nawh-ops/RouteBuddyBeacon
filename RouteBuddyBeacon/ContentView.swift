@@ -4,10 +4,10 @@ import MapKit
 
 struct ContentView: View {
     @StateObject private var locationManager = LocationManager()
-
+    
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var autoFollow = true
-
+    
     var body: some View {
         VStack(spacing: 0) {
             Map(position: $cameraPosition, interactionModes: .all) {
@@ -17,7 +17,7 @@ struct ContentView: View {
                             .stroke(.blue, lineWidth: 4)
                     }
                 }
-
+                
                 if let location = locationManager.lastLocation {
                     Marker("You", coordinate: location.coordinate)
                 }
@@ -35,17 +35,17 @@ struct ContentView: View {
                     updateCameraForFollowMode()
                 }
             }
-
+            
             ScrollView {
                 VStack(spacing: 16) {
                     Text("RouteBuddy Beacon")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-
+                    
                     Toggle("Auto-Follow", isOn: $autoFollow)
                         .font(.headline)
                         .padding(.horizontal)
-
+                    
                     Group {
                         switch locationManager.authorizationStatus {
                         case .notDetermined:
@@ -61,10 +61,10 @@ struct ContentView: View {
                         }
                     }
                     .multilineTextAlignment(.center)
-
+                    
                     if let fix = locationManager.currentFix {
                         let message = fix.asBeaconMessage()
-
+                        
                         VStack(spacing: 8) {
                             Text("Latitude: \(fix.latitude, specifier: "%.6f")")
                             Text("Longitude: \(fix.longitude, specifier: "%.6f")")
@@ -76,13 +76,13 @@ struct ContentView: View {
                                 .font(.footnote)
                                 .multilineTextAlignment(.center)
                                 .foregroundStyle(.secondary)
-
+                            
                             if let speedKPH = fix.speedKPH {
                                 Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
                             } else {
                                 Text("Speed: unavailable")
                             }
-
+                            
                             Text("Course: \(fix.courseDescription)")
                         }
                         .font(.title3)
@@ -90,7 +90,7 @@ struct ContentView: View {
                         Text("Waiting for location...")
                             .foregroundStyle(.secondary)
                     }
-
+                    
                     if let errorMessage = locationManager.errorMessage {
                         Text(errorMessage)
                             .foregroundStyle(.red)
@@ -98,75 +98,80 @@ struct ContentView: View {
                     }
                     
                     VStack(spacing: 6) {
-
+                        
                         Text("Session Stats")
                             .font(.headline)
-
+                        
                         Text("Distance: \(locationManager.sessionStats.distanceKM, specifier: "%.3f") km")
-
+                        
                         Text("Points: \(locationManager.sessionStats.pointCount)")
-
+                        
                         Text("Duration: \(formatDuration(locationManager.sessionStats.duration))")
                         
                         Text("Avg Speed: \(locationManager.sessionStats.averageSpeedKPH, specifier: "%.1f") km/h")
-
+                        
                     }
                     .font(.subheadline)
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-
+                    
                     VStack(spacing: 12) {
                         Text("Recording state: \(recordingStateText)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-
+                        
                         HStack(spacing: 12) {
                             Button("Request Permission") {
                                 locationManager.requestLocationPermission()
                             }
                             .buttonStyle(.borderedProminent)
-
+                            
                             switch locationManager.recordingState {
                             case .idle:
                                 Button("Start Recording") {
                                     locationManager.startRecording()
                                 }
                                 .buttonStyle(.bordered)
-
+                                
                             case .recording:
                                 Button("Pause") {
                                     locationManager.pauseRecording()
                                 }
                                 .buttonStyle(.bordered)
-
+                                
                                 Button("Stop") {
                                     locationManager.stopRecording()
                                 }
                                 .buttonStyle(.borderedProminent)
-
+                                
                             case .paused:
                                 Button("Resume") {
                                     locationManager.resumeRecording()
                                 }
                                 .buttonStyle(.bordered)
-
+                                
                                 Button("Stop") {
                                     locationManager.stopRecording()
                                 }
                                 .buttonStyle(.borderedProminent)
                             }
                         }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
                     .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
-                .padding()
+            }
+            .sheet(isPresented: $locationManager.shouldShowShareSheet) {
+                if let exportURL = locationManager.exportURL {
+                    ShareSheet(items: [exportURL])
+                }
             }
         }
     }
-
+    
     private func updateCameraForFollowMode() {
         guard autoFollow else {
             if let location = locationManager.lastLocation {
@@ -182,7 +187,7 @@ struct ContentView: View {
             }
             return
         }
-
+        
         if let fix = locationManager.currentFix,
            let speedKPH = fix.speedKPH,
            speedKPH > 5,
@@ -198,7 +203,7 @@ struct ContentView: View {
             )
         }
     }
-
+    
     private var recordingStateText: String {
         switch locationManager.recordingState {
         case .idle:
@@ -209,22 +214,22 @@ struct ContentView: View {
             return "Paused"
         }
     }
-
+    
     private func formatDuration(_ seconds: TimeInterval) -> String {
         let totalSeconds = Int(seconds)
-
+        
         let hours = totalSeconds / 3600
         let minutes = (totalSeconds % 3600) / 60
         let secs = totalSeconds % 60
-
+        
         if hours > 0 {
-            return String(format: "%02d:%02d:%02d", hours, minutes, secs)
-        } else {
-            return String(format: "%02d:%02d", minutes, secs)
+                    return String(format: "%02d:%02d:%02d", hours, minutes, secs)
+                } else {
+                    return String(format: "%02d:%02d", minutes, secs)
+                }
+            }
         }
-    }
-}
 
-#Preview {
-    ContentView()
-}
+        #Preview {
+            ContentView()
+        }
