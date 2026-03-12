@@ -3,6 +3,12 @@ import Foundation
 import CoreLocation
 import Combine
 
+enum RecordingState {
+    case idle
+    case recording
+    case paused
+}
+
 @MainActor
 final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
@@ -18,6 +24,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var course: Double?
     @Published var trackSegments: [[CLLocationCoordinate2D]] = []
     @Published var errorMessage: String?
+    @Published var recordingState: RecordingState = .idle
 
     override init() {
         self.authorizationStatus = manager.authorizationStatus
@@ -59,26 +66,51 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
 
-        switch manager.authorizationStatus {
-        case .authorizedWhenInUse, .authorizedAlways:
-            errorMessage = nil
-            manager.startUpdatingLocation()
+          authorizationStatus = manager.authorizationStatus
 
-        case .denied:
-            errorMessage = "Location access denied."
+          switch manager.authorizationStatus {
 
-        case .restricted:
-            errorMessage = "Location access restricted."
+          case .authorizedWhenInUse, .authorizedAlways:
+              errorMessage = nil
+              manager.startUpdatingLocation()
 
-        case .notDetermined:
-            errorMessage = nil
+          case .denied:
+              errorMessage = "Location access denied."
 
-        @unknown default:
-            errorMessage = "Unknown location authorization state."
+          case .restricted:
+              errorMessage = "Location access restricted."
+
+          case .notDetermined:
+              errorMessage = nil
+
+          @unknown default:
+              errorMessage = "Unknown location authorization state."
+          }
         }
-    }
+
+
+        func startRecording() {
+            clearTrack()
+            recordingState = .recording
+            startUpdatingLocation()
+        }
+
+        func pauseRecording() {
+            recordingState = .paused
+            stopUpdatingLocation()
+        }
+
+        func resumeRecording() {
+            recordingState = .recording
+            startUpdatingLocation()
+        }
+
+        func stopRecording() {
+            recordingState = .idle
+            stopUpdatingLocation()
+        }
+    
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }

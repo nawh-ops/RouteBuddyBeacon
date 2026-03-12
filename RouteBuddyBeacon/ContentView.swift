@@ -23,7 +23,7 @@ struct ContentView: View {
                 }
             }
             .mapStyle(.standard(elevation: .realistic))
-            .frame(height: 320)
+            .frame(height: 260)
             .onAppear {
                 updateCameraForFollowMode()
             }
@@ -97,20 +97,45 @@ struct ContentView: View {
                             .multilineTextAlignment(.center)
                     }
                     
-                    HStack(spacing: 12) {
-                        Button("Request Permission") {
-                            locationManager.requestLocationPermission()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        
-                        Button("Start Location") {
-                            locationManager.clearTrack()
-                            locationManager.startUpdatingLocation()
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                }
-                .padding()
+                    Text("Recording state: \(recordingStateText)")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+
+                                        HStack(spacing: 12) {
+
+                                            Button("Request Permission") {
+                                                locationManager.requestLocationPermission()
+                                            }
+                                            .buttonStyle(.borderedProminent)
+
+                                            switch locationManager.recordingState {
+
+                                            case .idle:
+                                                Button("Start Recording") {
+                                                    locationManager.startRecording()
+                                                }
+                                                .buttonStyle(.bordered)
+
+                                            case .recording:
+                                                Button("Pause") {
+                                                    locationManager.pauseRecording()
+                                                }
+                                                .buttonStyle(.bordered)
+
+                                            case .paused:
+                                                Button("Resume") {
+                                                    locationManager.resumeRecording()
+                                                }
+                                                .buttonStyle(.bordered)
+
+                                                Button("Stop") {
+                                                    locationManager.stopRecording()
+                                                }
+                                                .buttonStyle(.borderedProminent)
+                                            }
+                                        }
+                                    }
+                                    .padding()
             }
         }
     }
@@ -130,7 +155,7 @@ struct ContentView: View {
             }
             return
         }
-        
+
         if let fix = locationManager.currentFix,
            let speedKPH = fix.speedKPH,
            speedKPH > 5,
@@ -146,7 +171,19 @@ struct ContentView: View {
             )
         }
     }
-}
-    #Preview {
-        ContentView()
+
+    private var recordingStateText: String {
+        switch locationManager.recordingState {
+        case .idle:
+            return "Idle"
+        case .recording:
+            return "Recording"
+        case .paused:
+            return "Paused"
+        }
     }
+}
+
+#Preview {
+    ContentView()
+}
