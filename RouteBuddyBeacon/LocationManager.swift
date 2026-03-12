@@ -18,6 +18,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var currentFix: BeaconFix?
     @Published var latitude: Double?
     @Published var longitude: Double?
+    @Published var sessionStats = SessionStats()
     @Published var horizontalAccuracy: Double?
     @Published var timestamp: Date?
     @Published var speed: Double?
@@ -94,6 +95,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             clearTrack()
             recordingState = .recording
             startUpdatingLocation()
+            sessionStats.start()
         }
 
         func pauseRecording() {
@@ -109,17 +111,22 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         func stopRecording() {
             recordingState = .idle
             stopUpdatingLocation()
+            sessionStats.stop()
         }
     
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        if recordingState == .recording {
+            sessionStats.addLocation(location)
+        }
 
         lastLocation = location
         latitude = location.coordinate.latitude
         longitude = location.coordinate.longitude
         horizontalAccuracy = location.horizontalAccuracy
         timestamp = location.timestamp
+        
 
         speed = location.speed >= 0 ? location.speed : nil
         course = location.course >= 0 ? location.course : nil

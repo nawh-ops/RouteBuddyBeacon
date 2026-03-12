@@ -96,6 +96,23 @@ struct ContentView: View {
                             .foregroundStyle(.red)
                             .multilineTextAlignment(.center)
                     }
+                    
+                    VStack(spacing: 6) {
+
+                        Text("Session Stats")
+                            .font(.headline)
+
+                        Text("Distance: \(locationManager.sessionStats.distanceKM, specifier: "%.3f") km")
+
+                        Text("Points: \(locationManager.sessionStats.pointCount)")
+
+                        Text("Duration: \(formatDuration(locationManager.sessionStats.duration))")
+
+                    }
+                    .font(.subheadline)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
 
                     VStack(spacing: 12) {
                         Text("Recording state: \(recordingStateText)")
@@ -188,6 +205,20 @@ struct ContentView: View {
             return "Recording"
         case .paused:
             return "Paused"
+        }
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let totalSeconds = Int(seconds)
+
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let secs = totalSeconds % 60
+
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, secs)
+        } else {
+            return String(format: "%02d:%02d", minutes, secs)
         }
     }
 }
