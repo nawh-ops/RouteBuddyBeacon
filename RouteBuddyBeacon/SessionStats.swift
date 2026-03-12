@@ -39,4 +39,12 @@ class SessionStats: ObservableObject {
     var distanceKM: Double {
         distanceMeters / 1000
     }
+
+    var averageSpeedKPH: Double {
+        let seconds = duration
+        guard seconds > 0 else { return 0 }
+
+        let metersPerSecond = distanceMeters / seconds
+        return metersPerSecond * 3.6
+    }
 }

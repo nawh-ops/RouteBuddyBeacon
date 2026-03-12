@@ -107,6 +107,8 @@ struct ContentView: View {
                         Text("Points: \(locationManager.sessionStats.pointCount)")
 
                         Text("Duration: \(formatDuration(locationManager.sessionStats.duration))")
+                        
+                        Text("Avg Speed: \(locationManager.sessionStats.averageSpeedKPH, specifier: "%.1f") km/h")
 
                     }
                     .font(.subheadline)
