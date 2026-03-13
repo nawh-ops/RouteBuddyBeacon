@@ -28,6 +28,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var errorMessage: String?
     @Published var recordingState: RecordingState = .idle
     @Published var exportURL: URL?
+    @Published var quodWordsExportURL: URL?
     @Published var shouldShowShareSheet = false
 
     override init() {
@@ -116,6 +117,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             recordingState = .idle
             stopUpdatingLocation()
             exportGPX()
+            exportQuodWordsSessionDebug()
             sessionStats.stop()
         }
     
@@ -230,6 +232,28 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             print("GPX EXPORT SUCCESS: \(url.path)")
         } catch {
             print("GPX EXPORT FAILED: \(error.localizedDescription)")
+        }
+    }
+    private func exportQuodWordsSessionDebug() {
+        guard !recordedLocations.isEmpty else {
+            print("QUODWORDS EXPORT: no recorded locations")
+            return
+        }
+
+        let report = QuodWordsSessionExporter.generateSessionReport(from: recordedLocations)
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+
+        let filename = "beacon-quodwords-session-\(formatter.string(from: Date())).txt"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+
+        do {
+            try report.write(to: url, atomically: true, encoding: .utf8)
+            quodWordsExportURL = url
+            print("QUODWORDS EXPORT SUCCESS: \(url.path)")
+        } catch {
+            print("QUODWORDS EXPORT FAILED: \(error.localizedDescription)")
         }
     }
     
