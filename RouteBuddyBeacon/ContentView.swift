@@ -4,25 +4,24 @@ import MapKit
 
 struct ContentView: View {
     @StateObject private var locationManager = LocationManager()
-    
+    @State private var showDebug = false
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var autoFollow = true
     
     var body: some View {
         VStack(spacing: 0) {
             Map(position: $cameraPosition, interactionModes: .all) {
-                ForEach(Array(locationManager.trackSegments.enumerated()), id: \.offset) { _, segment in
-                    if segment.count > 1 {
-                        MapPolyline(coordinates: segment)
-                            .stroke(.blue, lineWidth: 4)
-                    }
+                if locationManager.recordedLocations.count > 1 {
+                    MapPolyline(
+                        coordinates: locationManager.recordedLocations.map { $0.coordinate }
+                    )
+                    .stroke(.blue, lineWidth: 4)
                 }
-                
+
                 if let location = locationManager.lastLocation {
                     Marker("You", coordinate: location.coordinate)
                 }
             }
-            .mapStyle(.standard(elevation: .realistic))
             .frame(height: 260)
             .onAppear {
                 updateCameraForFollowMode()
@@ -35,13 +34,13 @@ struct ContentView: View {
                     updateCameraForFollowMode()
                 }
             }
-            
+
             ScrollView {
                 VStack(spacing: 16) {
                     Text("RouteBuddy Beacon")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                    
+
                     Toggle("Auto-Follow", isOn: $autoFollow)
                         .font(.headline)
                         .padding(.horizontal)
@@ -66,16 +65,41 @@ struct ContentView: View {
                         let message = fix.asBeaconMessage()
                         
                         VStack(spacing: 8) {
-                            Text("Latitude: \(fix.latitude, specifier: "%.6f")")
-                            Text("Longitude: \(fix.longitude, specifier: "%.6f")")
-                            Text("Accuracy: \(fix.accuracyDescription)")
-                            Text("Timestamp: \(fix.timestamp.formatted())")
+
                             Text("QuodWords: \(fix.quodWordsCode)")
-                            Text("Device ID: \(message.deviceID)")
-                            Text("Payload keys: \(message.payload.keys.sorted().joined(separator: ", "))")
-                                .font(.footnote)
-                                .multilineTextAlignment(.center)
-                                .foregroundStyle(.secondary)
+                                .font(.headline)
+
+                            if let speedKPH = fix.speedKPH {
+                                
+                            } else {
+                                Text("Speed: unavailable")
+                            }
+
+
+                            DisclosureGroup("Debug Information", isExpanded: $showDebug) {
+
+                                VStack(spacing: 6) {
+
+                                    Text("Latitude: \(fix.latitude, specifier: "%.6f")")
+                                    Text("Longitude: \(fix.longitude, specifier: "%.6f")")
+                                    Text("Accuracy: \(fix.accuracyDescription)")
+                                    Text("Timestamp: \(fix.timestamp.formatted())")
+
+                                    Text("Device ID: \(message.deviceID)")
+
+                                    Text("Payload keys: \(message.payload.keys.sorted().joined(separator: ", "))")
+                                        .font(.footnote)
+                                        .multilineTextAlignment(.center)
+                                        .foregroundStyle(.secondary)
+
+                                }
+                                .font(.caption)
+
+                            }
+                            .padding(.top, 6)
+
+                        }
+                        .font(.title3)
                             
                             if let speedKPH = fix.speedKPH {
                                 Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
@@ -83,12 +107,13 @@ struct ContentView: View {
                                 Text("Speed: unavailable")
                             }
                             
-                            Text("Course: \(fix.courseDescription)")
+                        Text("Course: \(fix.courseDescription)")
+                        } else {
+
+                            Text("Waiting for location...")
+                                .foregroundStyle(.secondary)
+
                         }
-                        .font(.title3)
-                    } else {
-                        Text("Waiting for location...")
-                            .foregroundStyle(.secondary)
                     }
                     
                     if let errorMessage = locationManager.errorMessage {
@@ -170,39 +195,38 @@ struct ContentView: View {
                 }
             }
         }
-    }
     
-    private func updateCameraForFollowMode() {
-        guard autoFollow else {
-            if let location = locationManager.lastLocation {
-                cameraPosition = .region(
-                    MKCoordinateRegion(
-                        center: location.coordinate,
-                        span: MKCoordinateSpan(
-                            latitudeDelta: 0.01,
-                            longitudeDelta: 0.01
-                        )
+private func updateCameraForFollowMode() {
+    guard autoFollow else {
+        if let location = locationManager.lastLocation {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: MKCoordinateSpan(
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01
                     )
                 )
-            }
-            return
-        }
-        
-        if let fix = locationManager.currentFix,
-           let speedKPH = fix.speedKPH,
-           speedKPH > 5,
-           fix.course != nil {
-            cameraPosition = .userLocation(
-                followsHeading: true,
-                fallback: .automatic
-            )
-        } else {
-            cameraPosition = .userLocation(
-                followsHeading: false,
-                fallback: .automatic
             )
         }
+        return
     }
+
+    if let fix = locationManager.currentFix,
+       let speedKPH = fix.speedKPH,
+       speedKPH > 5,
+       fix.course != nil {
+        cameraPosition = .userLocation(
+            followsHeading: true,
+            fallback: .automatic
+        )
+    } else {
+        cameraPosition = .userLocation(
+            followsHeading: false,
+            fallback: .automatic
+        )
+    }
+}
     
     private var recordingStateText: String {
         switch locationManager.recordingState {
