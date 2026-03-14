@@ -186,17 +186,15 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity)
                         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
                     }
-                    .padding()
-                }
-            }
-            .sheet(isPresented: $locationManager.shouldShowShareSheet) {
-                if let exportURL = locationManager.exportURL {
-                    ShareSheet(items: [exportURL])
-                }
-            }
-        }
-    
-private func updateCameraForFollowMode() {
+                                        .padding()
+                                    }
+                                }
+                                .sheet(isPresented: $locationManager.shouldShowShareSheet) {
+                                    ShareSheet(items: locationManager.exportURLs)
+                                }
+                            }
+
+                        private func updateCameraForFollowMode() {
     guard autoFollow else {
         if let location = locationManager.lastLocation {
             cameraPosition = .region(

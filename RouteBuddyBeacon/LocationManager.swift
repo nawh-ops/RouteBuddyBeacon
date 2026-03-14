@@ -27,8 +27,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var trackSegments: [[CLLocationCoordinate2D]] = []
     @Published var errorMessage: String?
     @Published var recordingState: RecordingState = .idle
-    @Published var exportURL: URL?
-    @Published var quodWordsExportURL: URL?
+    @Published var exportURLs: [URL] = []
     @Published var shouldShowShareSheet = false
 
     override init() {
@@ -113,13 +112,28 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             startUpdatingLocation()
         }
 
-        func stopRecording() {
-            recordingState = .idle
-            stopUpdatingLocation()
-            exportGPX()
-            exportQuodWordsSessionDebug()
-            sessionStats.stop()
+    func stopRecording() {
+        recordingState = .idle
+        stopUpdatingLocation()
+
+        var urls: [URL] = []
+
+        if let gpxURL = exportGPX() {
+            urls.append(gpxURL)
         }
+
+        if let quodWordsURL = exportQuodWordsSession() {
+            urls.append(quodWordsURL)
+        }
+
+        exportURLs = urls
+
+        if !exportURLs.isEmpty {
+            shouldShowShareSheet = true
+        }
+
+        sessionStats.stop()
+    }
     
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -211,10 +225,11 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         trackSegments.reduce(0) { $0 + $1.count }
     }
     
-    private func exportGPX() {
+    private func exportGPX() -> URL? {
+        
         guard !recordedLocations.isEmpty else {
             print("GPX EXPORT: no recorded locations")
-            return
+            return nil
         }
 
         let gpxString = GPXExporter.generateGPX(from: recordedLocations)
@@ -227,17 +242,18 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
         do {
             try gpxString.write(to: url, atomically: true, encoding: .utf8)
-            exportURL = url
-            shouldShowShareSheet = true
+
             print("GPX EXPORT SUCCESS: \(url.path)")
+            return url
         } catch {
             print("GPX EXPORT FAILED: \(error.localizedDescription)")
+            return nil
         }
     }
-    private func exportQuodWordsSessionDebug() {
+    private func exportQuodWordsSession() -> URL? {
         guard !recordedLocations.isEmpty else {
             print("QUODWORDS EXPORT: no recorded locations")
-            return
+            return nil
         }
 
         let report = QuodWordsSessionExporter.generateSessionReport(from: recordedLocations)
@@ -250,10 +266,11 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
         do {
             try report.write(to: url, atomically: true, encoding: .utf8)
-            quodWordsExportURL = url
             print("QUODWORDS EXPORT SUCCESS: \(url.path)")
+            return url
         } catch {
             print("QUODWORDS EXPORT FAILED: \(error.localizedDescription)")
+            return nil
         }
     }
     
