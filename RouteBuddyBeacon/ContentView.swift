@@ -70,7 +70,7 @@ struct ContentView: View {
                                 .font(.headline)
 
                             if let speedKPH = fix.speedKPH {
-                                
+                                Text("Speed: \(String(format: "%.1f", speedKPH)) km/h")
                             } else {
                                 Text("Speed: unavailable")
                             }
@@ -189,9 +189,11 @@ struct ContentView: View {
                                         .padding()
                                     }
                                 }
-                                .sheet(isPresented: $locationManager.shouldShowShareSheet) {
-                                    ShareSheet(items: locationManager.exportURLs)
-                                }
+        .sheet(isPresented: $locationManager.shouldShowShareSheet, onDismiss: {
+            locationManager.exportURLs.removeAll()
+        }) {
+            ShareSheet(items: locationManager.exportURLs)
+        }
                             }
 
                         private func updateCameraForFollowMode() {
