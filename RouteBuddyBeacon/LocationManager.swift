@@ -238,7 +238,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
 
         let filename = "beacon-track-\(formatter.string(from: Date())).gpx"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let url = documents.appendingPathComponent(filename)
 
         do {
             try gpxString.write(to: url, atomically: true, encoding: .utf8)
@@ -262,7 +263,8 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
 
         let filename = "beacon-quodwords-session-\(formatter.string(from: Date())).txt"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let url = documents.appendingPathComponent(filename)
 
         do {
             try report.write(to: url, atomically: true, encoding: .utf8)
