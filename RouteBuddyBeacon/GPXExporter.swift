@@ -21,30 +21,24 @@ struct GPXExporter {
         var gpx = """
         <?xml version="1.0" encoding="UTF-8"?>
         <gpx version="1.1" creator="RouteBuddy Beacon"
-             xmlns="http://www.topografix.com/GPX/1/1">
- 
+             xmlns="http://www.topografix.com/GPX/1/1"
+             xmlns:beacon="https://routebuddy.com/beacon/gpx">
+
         <metadata>
           <name>Beacon Session</name>
-          <time>2026-03-14T17:24:15Z</time>
+          <time>\(startTime)</time>
           <desc>
-            End: 2026-03-14T17:36:10Z
-            Distance: 1.342 km
-            Duration: 420 seconds
-            Avg Speed: 11.5 km/h
+            End: \(endTime)
+            Distance: \(String(format: "%.3f", distanceKM)) km
+            Duration: \(Int(durationSeconds)) seconds
+            Avg Speed: \(String(format: "%.1f", avgSpeedKPH)) km/h
           </desc>
         </metadata>
- <desc>
- End: \(endTime)
- Distance: \(String(format: "%.3f", distanceKM)) km
- Duration: \(Int(durationSeconds)) seconds
- Avg Speed: \(String(format: "%.1f", avgSpeedKPH)) km/h
- </desc>
- </metadata>
- 
- <trk>
- <name>RouteBuddy Beacon Track</name>
- <trkseg>
- """
+
+        <trk>
+        <name>RouteBuddy Beacon Track</name>
+        <trkseg>
+        """
         
         let formatter = ISO8601DateFormatter()
         
@@ -52,36 +46,49 @@ struct GPXExporter {
             let lat = location.coordinate.latitude
             let lon = location.coordinate.longitude
             let time = formatter.string(from: location.timestamp)
-            
+
+            let fix = BeaconFix(
+                coordinate: location.coordinate,
+                horizontalAccuracy: location.horizontalAccuracy,
+                timestamp: location.timestamp,
+                speed: location.speed >= 0 ? location.speed : nil,
+                course: location.course >= 0 ? location.course : nil
+            )
+
+            let quodWordsCode = QuodWordsEncoder.encode(fix)
+
             gpx += """
-     <trkpt lat="\(lat)" lon="\(lon)">
-     """
-            
+            <trkpt lat="\(lat)" lon="\(lon)">
+            """
+
             if location.altitude != 0 {
                 gpx += """
-         <ele>\(location.altitude)</ele>
-         """
+                <ele>\(location.altitude)</ele>
+                """
             }
-            
+
             gpx += """
-         <time>\(time)</time>
-     """
-            
+                <time>\(time)</time>
+                <extensions>
+                    <beacon:quodwords>\(quodWordsCode)</beacon:quodwords>
+                </extensions>
+            """
+
             if location.speed >= 0 {
                 gpx += """
-         <speed>\(location.speed)</speed>
-         """
+                <speed>\(location.speed)</speed>
+                """
             }
-            
+
             if location.course >= 0 {
                 gpx += """
-         <course>\(location.course)</course>
-         """
+                <course>\(location.course)</course>
+                """
             }
-            
+
             gpx += """
-     </trkpt>
-     """
+            </trkpt>
+            """
         }
         
         gpx += """

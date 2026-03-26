@@ -131,6 +131,11 @@ struct ContentView: View {
                         
                         Text("Points: \(locationManager.sessionStats.pointCount)")
                         
+                        Text("Unique Cells: \(locationManager.sessionStats.uniqueCellCount)")
+                        
+                        Text("Unique Cells: \(locationManager.sessionStats.uniqueCellCount)")
+                            .foregroundColor(.secondary)
+                        
                         Text("Duration: \(formatDuration(locationManager.sessionStats.duration))")
                         
                         Text("Avg Speed: \(locationManager.sessionStats.averageSpeedKPH, specifier: "%.1f") km/h")

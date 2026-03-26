@@ -7,7 +7,9 @@ class SessionStats: ObservableObject {
     @Published var distanceMeters: Double = 0
     @Published var pointCount: Int = 0
     @Published var startTime: Date?
+    @Published var uniqueCellCount: Int = 0
 
+    private var visitedCells: Set<String> = []
     private var lastLocation: CLLocation?
 
     func start() {
@@ -15,6 +17,8 @@ class SessionStats: ObservableObject {
         pointCount = 0
         startTime = Date()
         lastLocation = nil
+        uniqueCellCount = 0
+        visitedCells.removeAll()
     }
 
     func stop() {
@@ -27,6 +31,18 @@ class SessionStats: ObservableObject {
         if let last = lastLocation {
             distanceMeters += location.distance(from: last)
         }
+
+        let fix = BeaconFix(
+            coordinate: location.coordinate,
+            horizontalAccuracy: location.horizontalAccuracy,
+            timestamp: location.timestamp,
+            speed: location.speed >= 0 ? location.speed : nil,
+            course: location.course >= 0 ? location.course : nil
+        )
+
+        let code = QuodWordsEncoder.encode(fix)
+        visitedCells.insert(code)
+        uniqueCellCount = visitedCells.count
 
         lastLocation = location
     }
