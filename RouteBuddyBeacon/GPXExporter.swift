@@ -47,40 +47,30 @@ struct GPXExporter {
 
             let quodWordsCode = fix.quodWordsCode
 
-            gpx += """
-                <trkpt lat="\(lat)" lon="\(lon)">
-            """
+            let eleLine = location.altitude != 0
+                ? "  <ele>\(location.altitude)</ele>\n"
+                : ""
 
-            if location.altitude != 0 {
-                gpx += """
-                      <ele>\(location.altitude)</ele>
-                """
-            }
+            let speedLine = location.speed >= 0
+                ? "  <speed>\(location.speed)</speed>\n"
+                : ""
 
-            gpx += """
-                      <time>\(time)</time>
-            """
+            let courseLine = location.course >= 0
+                ? "  <course>\(location.course)</course>\n"
+                : ""
 
-            if location.speed >= 0 {
-                gpx += """
-                      <speed>\(location.speed)</speed>
-                """
-            }
-
-            if location.course >= 0 {
-                gpx += """
-                      <course>\(location.course)</course>
-                """
-            }
-
-            gpx += """
-                      <cmt>QW: \(quodWordsCode)</cmt>
-                      <extensions>
-                        <beacon:quodwords>\(quodWordsCode)</beacon:quodwords>
-                      </extensions>
-                </trkpt>
+            let trackPoint = """
+            <trkpt lat="\(lat)" lon="\(lon)">
+            \(eleLine)  <time>\(time)</time>
+            \(speedLine)\(courseLine)  <cmt>QW: \(quodWordsCode)</cmt>
+              <extensions>
+                <beacon:quodwords>\(quodWordsCode)</beacon:quodwords>
+              </extensions>
+            </trkpt>
 
             """
+
+            gpx += trackPoint
         }
 
         gpx += """
