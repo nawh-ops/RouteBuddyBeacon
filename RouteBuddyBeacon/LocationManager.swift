@@ -238,12 +238,19 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
 
         let filename = "beacon-track-\(formatter.string(from: Date())).gpx"
+        let url: URL
+
+        #if targetEnvironment(simulator)
+        let hostHome = ProcessInfo.processInfo.environment["SIMULATOR_HOST_HOME"] ?? NSHomeDirectory()
+        let desktop = URL(fileURLWithPath: hostHome).appendingPathComponent("Desktop")
+        url = desktop.appendingPathComponent(filename)
+        #else
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let url = documents.appendingPathComponent(filename)
+        url = documents.appendingPathComponent(filename)
+        #endif
 
         do {
             try gpxString.write(to: url, atomically: true, encoding: .utf8)
-
             print("GPX EXPORT SUCCESS: \(url.path)")
             return url
         } catch {
@@ -251,6 +258,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             return nil
         }
     }
+  
     private func exportQuodWordsSession() -> URL? {
         guard !recordedLocations.isEmpty else {
             print("QUODWORDS EXPORT: no recorded locations")

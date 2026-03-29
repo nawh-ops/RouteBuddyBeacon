@@ -62,7 +62,9 @@ struct GPXExporter {
             let trackPoint = """
             <trkpt lat="\(lat)" lon="\(lon)">
             \(eleLine)  <time>\(time)</time>
-            \(speedLine)\(courseLine)  <cmt>QW: \(quodWordsCode)</cmt>
+            \(speedLine)\(courseLine)
+            <name>\(quodWordsCode)</name>
+            <cmt>QW: \(quodWordsCode)</cmt>
               <extensions>
                 <beacon:quodwords>\(quodWordsCode)</beacon:quodwords>
               </extensions>
