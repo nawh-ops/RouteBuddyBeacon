@@ -122,19 +122,140 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
             urls.append(gpxURL)
         }
 
+        if let csvURL = exportCSV() {
+            urls.append(csvURL)
+        }
+
         if let quodWordsURL = exportQuodWordsSession() {
             urls.append(quodWordsURL)
         }
 
         exportURLs = urls
 
-        if !exportURLs.isEmpty {
-            shouldShowShareSheet = true
-        }
+#if targetEnvironment(simulator)
+shouldShowShareSheet = false
+#else
+if !exportURLs.isEmpty {
+    shouldShowShareSheet = true
+}
+#endif
 
         sessionStats.stop()
     }
-    
+
+    private func exportGPX() -> URL? {
+        
+        guard !recordedLocations.isEmpty else {
+            print("GPX EXPORT: no recorded locations")
+            return nil
+        }
+
+        let gpxString = GPXExporter.generateGPX(from: recordedLocations)
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+
+        let filename = "beacon-track-\(formatter.string(from: Date())).gpx"
+        let url: URL
+
+        #if targetEnvironment(simulator)
+        let hostHome = ProcessInfo.processInfo.environment["SIMULATOR_HOST_HOME"] ?? NSHomeDirectory()
+        let desktop = URL(fileURLWithPath: hostHome).appendingPathComponent("Desktop")
+        url = desktop.appendingPathComponent(filename)
+        #else
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        url = documents.appendingPathComponent(filename)
+        #endif
+
+        do {
+            try gpxString.write(to: url, atomically: true, encoding: .utf8)
+            print("GPX EXPORT SUCCESS: \(url.path)")
+            return url
+        } catch {
+            print("GPX EXPORT FAILED: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private func exportCSV() -> URL? {
+        
+        guard !recordedLocations.isEmpty else {
+            print("CSV EXPORT: no recorded locations")
+            return nil
+        }
+
+        var csv = "lat,lon,time,speed,course,quodwords\n"
+        let isoFormatter = ISO8601DateFormatter()
+
+        for location in recordedLocations {
+            let lat = location.coordinate.latitude
+            let lon = location.coordinate.longitude
+            let time = isoFormatter.string(from: location.timestamp)
+            let speed = location.speed >= 0 ? location.speed : 0
+            let course = location.course >= 0 ? location.course : 0
+
+            let fix = BeaconFix(
+                coordinate: location.coordinate,
+                horizontalAccuracy: location.horizontalAccuracy,
+                timestamp: location.timestamp,
+                speed: location.speed >= 0 ? location.speed : nil,
+                course: location.course >= 0 ? location.course : nil
+            )
+
+            let quodWordsCode = fix.quodWordsCode
+
+            csv += "\(lat),\(lon),\(time),\(speed),\(course),\(quodWordsCode)\n"
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+
+        let filename = "beacon-track-\(formatter.string(from: Date())).csv"
+        let url: URL
+
+        #if targetEnvironment(simulator)
+        let hostHome = ProcessInfo.processInfo.environment["SIMULATOR_HOST_HOME"] ?? NSHomeDirectory()
+        let desktop = URL(fileURLWithPath: hostHome).appendingPathComponent("Desktop")
+        url = desktop.appendingPathComponent(filename)
+        #else
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        url = documents.appendingPathComponent(filename)
+        #endif
+
+        do {
+            try csv.write(to: url, atomically: true, encoding: .utf8)
+            print("CSV EXPORT SUCCESS: \(url.path)")
+            return url
+        } catch {
+            print("CSV EXPORT FAILED: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private func exportQuodWordsSession() -> URL? {
+        guard !recordedLocations.isEmpty else {
+            print("QUODWORDS EXPORT: no recorded locations")
+            return nil
+        }
+
+        let report = QuodWordsSessionExporter.generateSessionReport(from: recordedLocations)
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+
+        let filename = "beacon-quodwords-session-\(formatter.string(from: Date())).txt"
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let url = documents.appendingPathComponent(filename)
+
+        do {
+            try report.write(to: url, atomically: true, encoding: .utf8)
+            print("QUODWORDS EXPORT SUCCESS: \(url.path)")
+            return url
+        } catch {
+            print("QUODWORDS EXPORT FAILED: \(error.localizedDescription)")
+            return nil
+        }
+    }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
@@ -223,65 +344,6 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     
     private func totalPointsOfSegments() -> Int {
         trackSegments.reduce(0) { $0 + $1.count }
-    }
-    
-    private func exportGPX() -> URL? {
-        
-        guard !recordedLocations.isEmpty else {
-            print("GPX EXPORT: no recorded locations")
-            return nil
-        }
-
-        let gpxString = GPXExporter.generateGPX(from: recordedLocations)
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-
-        let filename = "beacon-track-\(formatter.string(from: Date())).gpx"
-        let url: URL
-
-        #if targetEnvironment(simulator)
-        let hostHome = ProcessInfo.processInfo.environment["SIMULATOR_HOST_HOME"] ?? NSHomeDirectory()
-        let desktop = URL(fileURLWithPath: hostHome).appendingPathComponent("Desktop")
-        url = desktop.appendingPathComponent(filename)
-        #else
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        url = documents.appendingPathComponent(filename)
-        #endif
-
-        do {
-            try gpxString.write(to: url, atomically: true, encoding: .utf8)
-            print("GPX EXPORT SUCCESS: \(url.path)")
-            return url
-        } catch {
-            print("GPX EXPORT FAILED: \(error.localizedDescription)")
-            return nil
-        }
-    }
-  
-    private func exportQuodWordsSession() -> URL? {
-        guard !recordedLocations.isEmpty else {
-            print("QUODWORDS EXPORT: no recorded locations")
-            return nil
-        }
-
-        let report = QuodWordsSessionExporter.generateSessionReport(from: recordedLocations)
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-
-        let filename = "beacon-quodwords-session-\(formatter.string(from: Date())).txt"
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let url = documents.appendingPathComponent(filename)
-
-        do {
-            try report.write(to: url, atomically: true, encoding: .utf8)
-            print("QUODWORDS EXPORT SUCCESS: \(url.path)")
-            return url
-        } catch {
-            print("QUODWORDS EXPORT FAILED: \(error.localizedDescription)")
-            return nil
-        }
     }
     
     func clearTrack() {
