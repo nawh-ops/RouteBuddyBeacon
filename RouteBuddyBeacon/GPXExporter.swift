@@ -32,10 +32,11 @@ struct GPXExporter {
 
         """
 
-        for location in locations {
+        for (index, location) in locations.enumerated() {
             let lat = location.coordinate.latitude
             let lon = location.coordinate.longitude
             let time = formatter.string(from: location.timestamp)
+            let shouldAnnotateQuodWords = (index % 3 == 0)
 
             let fix = BeaconFix(
                 coordinate: location.coordinate,
@@ -46,6 +47,21 @@ struct GPXExporter {
             )
 
             let quodWordsCode = fix.quodWordsCode
+            let nameLine = shouldAnnotateQuodWords
+                ? "  <name>\(quodWordsCode)</name>\n"
+                : ""
+
+            let commentLine = shouldAnnotateQuodWords
+                ? "  <cmt>QW: \(quodWordsCode)</cmt>\n"
+                : ""
+
+            let extensionsLine = shouldAnnotateQuodWords
+                ? """
+                  <extensions>
+                    <beacon:quodwords>\(quodWordsCode)</beacon:quodwords>
+                  </extensions>
+                  """
+                : ""
 
             let eleLine = location.altitude != 0
                 ? "  <ele>\(location.altitude)</ele>\n"
@@ -63,11 +79,7 @@ struct GPXExporter {
             <trkpt lat="\(lat)" lon="\(lon)">
             \(eleLine)  <time>\(time)</time>
             \(speedLine)\(courseLine)
-            <name>\(quodWordsCode)</name>
-            <cmt>QW: \(quodWordsCode)</cmt>
-              <extensions>
-                <beacon:quodwords>\(quodWordsCode)</beacon:quodwords>
-              </extensions>
+            \(nameLine)\(commentLine)\(extensionsLine)
             </trkpt>
 
             """
