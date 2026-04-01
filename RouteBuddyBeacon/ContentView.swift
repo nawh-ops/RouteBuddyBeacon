@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var autoFollow = true
     @State private var showCopiedToast = false
+    @State private var pasteStatusMessage: String?
 
     var body: some View {
         ZStack {
@@ -70,7 +71,6 @@ struct ContentView: View {
                                     .font(.headline)
                                     .onTapGesture {
                                         UIPasteboard.general.string = fix.quodWordsCode
-                                     
 
                                         let generator = UIImpactFeedbackGenerator(style: .light)
                                         generator.prepare()
@@ -86,9 +86,21 @@ struct ContentView: View {
                                             }
                                         }
                                     }
+
                                 ShareLink(item: fix.quodWordsCode) {
-                                        Label("Share QuodWords", systemImage: "square.and.arrow.up")
-                                    }
+                                    Label("Share QuodWords", systemImage: "square.and.arrow.up")
+                                }
+
+                                Button("Paste QuodWords") {
+                                    pasteQuodWordsFromClipboard()
+                                }
+                                .buttonStyle(.bordered)
+
+                                if let pasteStatusMessage {
+                                    Text(pasteStatusMessage)
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
 
                                 if let speedKPH = fix.speedKPH {
                                     Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
@@ -247,6 +259,30 @@ struct ContentView: View {
                 fallback: .automatic
             )
         }
+    }
+
+    private func pasteQuodWordsFromClipboard() {
+        guard let raw = UIPasteboard.general.string, !raw.isEmpty else {
+            pasteStatusMessage = "Clipboard is empty"
+            return
+        }
+
+        guard let coordinate = QuodWordsEncoder.decode(raw) else {
+            pasteStatusMessage = "Invalid QuodWords"
+            return
+        }
+
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: coordinate,
+                span: MKCoordinateSpan(
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01
+                )
+            )
+        )
+
+        pasteStatusMessage = "Resolved QuodWords"
     }
 
     private func formatDuration(_ seconds: TimeInterval) -> String {
