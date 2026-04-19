@@ -2,27 +2,28 @@ import Foundation
 import CoreLocation
 
 struct QuodWordsResolver {
-    
+
     static func resolve(_ input: String) -> CLLocationCoordinate2D? {
         let cleaned = clean(input)
+
         // 1. Try TAQ56 short code
         if let coord = parseTAQ56(cleaned) {
             return coord
         }
-        
+
         // 2. Try full QuodWords format
         if let coord = QuodWordsEncoder.decode(cleaned) {
             return coord
         }
-        
+
         // 3. Try lat/lon formats
         if let coord = parseLatLon(cleaned) {
             return coord
         }
-        
+
         return nil
     }
-    
+
     private static func clean(_ input: String) -> String {
         return input
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -30,10 +31,10 @@ struct QuodWordsResolver {
             .replacingOccurrences(of: " ", with: "")
             .uppercased()
     }
-    
+
     private static func parseLatLon(_ input: String) -> CLLocationCoordinate2D? {
         let separators = [",", "|"]
-        
+
         for sep in separators {
             let parts = input.split(separator: Character(sep))
             if parts.count == 2 {
@@ -45,10 +46,10 @@ struct QuodWordsResolver {
                 }
             }
         }
-        
+
         return nil
     }
-    
+
     private static func parseTAQ56(_ input: String) -> CLLocationCoordinate2D? {
         let pattern = #"^[A-Z]{3}[0-9]{2}$"#
 
@@ -127,5 +128,66 @@ struct QuodWordsResolver {
         let longitude = (subMinLon + subMaxLon) / 2.0
 
         return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    static func encodeTAQ56(from coordinate: CLLocationCoordinate2D) -> String {
+        let lat = coordinate.latitude
+        let lon = coordinate.longitude
+
+        // UK bounds
+        let minLat = 49.5
+        let maxLat = 59.0
+        let minLon = -8.5
+        let maxLon = 2.5
+
+        let gridCols = 133
+        let gridRows = 133
+
+        // Clamp into bounds (safety)
+        let clampedLat = min(max(lat, minLat), maxLat)
+        let clampedLon = min(max(lon, minLon), maxLon)
+
+        let latSpan = maxLat - minLat
+        let lonSpan = maxLon - minLon
+
+        let majorLatSpan = latSpan / Double(gridRows)
+        let majorLonSpan = lonSpan / Double(gridCols)
+
+        // Row (north → south)
+        let row = Int((maxLat - clampedLat) / majorLatSpan)
+        let col = Int((clampedLon - minLon) / majorLonSpan)
+
+        let safeRow = max(0, min(gridRows - 1, row))
+        let safeCol = max(0, min(gridCols - 1, col))
+
+        let cellIndex = safeRow * gridCols + safeCol
+
+        // Convert index -> LLL
+        let a = cellIndex / (26 * 26)
+        let b = (cellIndex / 26) % 26
+        let c = cellIndex % 26
+
+        func letter(_ v: Int) -> Character {
+            Character(UnicodeScalar(65 + v)!)
+        }
+
+        let l1 = letter(a)
+        let l2 = letter(b)
+        let l3 = letter(c)
+
+        // Sub-cell (10x10)
+        let majorMaxLat = maxLat - (Double(safeRow) * majorLatSpan)
+        let majorMinLon = minLon + (Double(safeCol) * majorLonSpan)
+
+        let subLatSpan = majorLatSpan / 10.0
+        let subLonSpan = majorLonSpan / 10.0
+
+        let subRow = Int((majorMaxLat - clampedLat) / subLatSpan)
+        let subCol = Int((clampedLon - majorMinLon) / subLonSpan)
+
+        let d1 = max(0, min(9, subRow))
+        let d2 = max(0, min(9, subCol))
+
+        return "\(l1)\(l2)\(l3)\(d1)\(d2)"
     }
 }
