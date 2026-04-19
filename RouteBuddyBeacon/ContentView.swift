@@ -6,11 +6,18 @@ import UIKit
 struct ContentView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var showDebug = false
-    @State private var cameraPosition: MapCameraPosition = .automatic
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 52.5, longitude: -1.5),
+            span: MKCoordinateSpan(latitudeDelta: 3.0, longitudeDelta: 3.0)
+        )
+    )
     @State private var autoFollow = true
     @State private var showCopiedToast = false
     @State private var pasteStatusMessage: String?
-
+    @State private var pastedCoordinate: CLLocationCoordinate2D?
+    @State private var manualInput: String = ""
+    @FocusState private var manualInputFocused: Bool
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -67,8 +74,16 @@ struct ContentView: View {
 
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
-                                Text("QuodWords: \(fix.quodWordsCode)")
-                                    .font(.headline)
+                                VStack(spacing: 4) {
+                                    Text("QuodWords")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+
+                                    Text(fix.quodWordsCode)
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .monospaced()
+                                }
                                     .onTapGesture {
                                         UIPasteboard.general.string = fix.quodWordsCode
 
@@ -86,6 +101,21 @@ struct ContentView: View {
                                             }
                                         }
                                     }
+                                VStack(spacing: 8) {
+                                    TextField("Enter location or code", text: $manualInput)
+                                        .textFieldStyle(.roundedBorder)
+                                        .autocorrectionDisabled()
+                                        .textInputAutocapitalization(.never)
+                                        .focused($manualInputFocused)
+                                        .onSubmit {
+                                            resolveManualInput()
+                                        }
+
+                                    Button("Go") {
+                                        resolveManualInput()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                }
 
                                 ShareLink(item: fix.quodWordsCode) {
                                     Label("Share QuodWords", systemImage: "square.and.arrow.up")
@@ -98,8 +128,10 @@ struct ContentView: View {
 
                                 if let pasteStatusMessage {
                                     Text(pasteStatusMessage)
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
+                                        .font(.headline)
+                                        .foregroundColor(
+                                            pasteStatusMessage == "Location loaded" ? .green : .red
+                                        )
                                 }
 
                                 if let speedKPH = fix.speedKPH {
@@ -264,13 +296,22 @@ struct ContentView: View {
     private func pasteQuodWordsFromClipboard() {
         guard let raw = UIPasteboard.general.string, !raw.isEmpty else {
             pasteStatusMessage = "Clipboard is empty"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                pasteStatusMessage = nil
+            }
             return
         }
 
-        guard let coordinate = QuodWordsEncoder.decode(raw) else {
-            pasteStatusMessage = "Invalid QuodWords"
+        guard let coordinate = QuodWordsResolver.resolve(raw) else {
+            pasteStatusMessage = "Invalid location"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                pasteStatusMessage = nil
+            }
             return
         }
+
+        pastedCoordinate = coordinate
+        autoFollow = false
 
         cameraPosition = .region(
             MKCoordinateRegion(
@@ -282,9 +323,53 @@ struct ContentView: View {
             )
         )
 
-        pasteStatusMessage = "Resolved QuodWords"
+        pasteStatusMessage = "Location loaded"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            pasteStatusMessage = nil
+        }
     }
+    
+    private func resolveManualInput() {
+        manualInputFocused = false
+        let trimmed = manualInput.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        guard !trimmed.isEmpty else {
+            pasteStatusMessage = "Enter a location"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                pasteStatusMessage = nil
+            }
+            return
+        }
+
+        guard let coordinate = QuodWordsResolver.resolve(trimmed) else {
+            pasteStatusMessage = "Invalid location"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                pasteStatusMessage = nil
+            }
+            return
+        }
+
+        pastedCoordinate = coordinate
+        autoFollow = false
+
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: coordinate,
+                span: MKCoordinateSpan(
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01
+                )
+            )
+        )
+
+        manualInput = ""
+        pasteStatusMessage = "Location loaded"
+       
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            pasteStatusMessage = nil
+        }
+    }
+    
     private func formatDuration(_ seconds: TimeInterval) -> String {
         let totalSeconds = Int(seconds)
 
