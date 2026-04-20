@@ -83,24 +83,33 @@ struct ContentView: View {
                                         .font(.title3)
                                         .fontWeight(.semibold)
                                         .monospaced()
-                                }
-                                    .onTapGesture {
-                                        UIPasteboard.general.string = fix.quodWordsCode
+                                        .onTapGesture {
+                                            UIPasteboard.general.string = fix.quodWordsCode
 
-                                        let generator = UIImpactFeedbackGenerator(style: .light)
-                                        generator.prepare()
-                                        generator.impactOccurred()
+                                            let generator = UIImpactFeedbackGenerator(style: .light)
+                                            generator.prepare()
+                                            generator.impactOccurred()
 
-                                        withAnimation {
-                                            showCopiedToast = true
-                                        }
-
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                                             withAnimation {
-                                                showCopiedToast = false
+                                                showCopiedToast = true
+                                            }
+
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                                                withAnimation {
+                                                    showCopiedToast = false
+                                                }
                                             }
                                         }
-                                    }
+
+                                    Text("TAQ")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+
+                                    Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
+                                        .font(.headline)
+                                        .monospaced()
+                                }
+
                                 VStack(spacing: 8) {
                                     TextField("Enter location or code", text: $manualInput)
                                         .textFieldStyle(.roundedBorder)

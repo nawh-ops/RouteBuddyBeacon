@@ -107,10 +107,8 @@ struct QuodWordsResolver {
 
         // Row 0 at north, increasing southwards
         let majorMaxLat = maxLat - (Double(row) * majorLatSpan)
-        let majorMinLat = majorMaxLat - majorLatSpan
 
         let majorMinLon = minLon + (Double(col) * majorLonSpan)
-        let majorMaxLon = majorMinLon + majorLonSpan
 
         // DD -> 10x10 sub-grid
         let subLatSpan = majorLatSpan / 10.0
