@@ -74,42 +74,33 @@ struct ContentView: View {
 
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
-                                VStack(spacing: 4) {
-                                    Text("QuodWords")
+                                VStack(spacing: 6) {
+                                    Text("Code")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-
-                                    Text(fix.quodWordsCode)
-                                        .font(.title3)
-                                        .fontWeight(.semibold)
-                                        .monospaced()
+                                    Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
+                                        .font(.system(size: 48, weight: .heavy, design: .monospaced))
+                                        .padding(.vertical, 6)
+                                        .contentShape(Rectangle())
                                         .onTapGesture {
-                                            UIPasteboard.general.string = fix.quodWordsCode
-
+                                            let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+                                            UIPasteboard.general.string = code
+                                            
                                             let generator = UIImpactFeedbackGenerator(style: .light)
                                             generator.prepare()
                                             generator.impactOccurred()
-
+                                            
                                             withAnimation {
                                                 showCopiedToast = true
                                             }
-
+                                            
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                                                 withAnimation {
                                                     showCopiedToast = false
                                                 }
                                             }
                                         }
-
-                                    Text("TAQ")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-
-                                    Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
-                                        .font(.headline)
-                                        .monospaced()
                                 }
-
                                 VStack(spacing: 8) {
                                     TextField("Enter location or code", text: $manualInput)
                                         .textFieldStyle(.roundedBorder)
