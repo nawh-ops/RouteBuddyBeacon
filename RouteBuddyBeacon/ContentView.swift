@@ -52,32 +52,13 @@ struct ContentView: View {
                             .font(.largeTitle)
                             .fontWeight(.bold)
 
-                        Toggle("Auto-Follow", isOn: $autoFollow)
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        Group {
-                            switch locationManager.authorizationStatus {
-                            case .notDetermined:
-                                Text("Location permission not requested yet.")
-                            case .restricted:
-                                Text("Location access is restricted.")
-                            case .denied:
-                                Text("Location access denied.")
-                            case .authorizedWhenInUse, .authorizedAlways:
-                                Text("Location access granted.")
-                            @unknown default:
-                                Text("Unknown authorization state.")
-                            }
-                        }
-                        .multilineTextAlignment(.center)
-
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
                                 VStack(spacing: 6) {
-                                    Text("Code")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                    Text("Your Code")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundStyle(.primary)
+
                                     Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
                                         .font(.system(size: 48, weight: .heavy, design: .monospaced))
                                         .padding(.vertical, 6)
@@ -85,22 +66,33 @@ struct ContentView: View {
                                         .onTapGesture {
                                             let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
                                             UIPasteboard.general.string = code
-                                            
+
                                             let generator = UIImpactFeedbackGenerator(style: .light)
                                             generator.prepare()
                                             generator.impactOccurred()
-                                            
+
                                             withAnimation {
                                                 showCopiedToast = true
                                             }
-                                            
+
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                                                 withAnimation {
                                                     showCopiedToast = false
                                                 }
                                             }
                                         }
+
+                                    HStack(spacing: 6) {
+                                        Circle()
+                                            .fill(.green)
+                                            .frame(width: 8, height: 8)
+
+                                        Text("Live")
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
+
                                 VStack(spacing: 8) {
                                     TextField("Enter location or code", text: $manualInput)
                                         .textFieldStyle(.roundedBorder)
