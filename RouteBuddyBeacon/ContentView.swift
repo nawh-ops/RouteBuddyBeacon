@@ -23,6 +23,14 @@ struct ContentView: View {
     let showAdvanced = false
     let showRecordingUI = false
     
+    private var currentGridRegion: MKCoordinateRegion {
+        MKCoordinateRegion(
+            center: locationManager.currentFix?.coordinate
+                ?? CLLocationCoordinate2D(latitude: 52.5, longitude: -1.5),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+    }
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -40,7 +48,7 @@ struct ContentView: View {
                         }
                     }
 
-                    MapGridOverlay()
+                    MapGridOverlay(region: currentGridRegion)
                 }
                 .frame(height: 260)
                 .onAppear {
@@ -294,22 +302,37 @@ struct ContentView: View {
     }
     
     private struct MapGridOverlay: View {
+        let region: MKCoordinateRegion
+        private let gridSizeMeters: CLLocationDistance = 9
+        private let minimumScreenSpacing: CGFloat = 12
+
         var body: some View {
             GeometryReader { geo in
-                Path { path in
-                    let spacing: CGFloat = 40
+                let centerLatitudeRadians = region.center.latitude * .pi / 180
+                let metersPerDegreeLongitude = 111_320 * cos(centerLatitudeRadians)
+                let visibleWidthMeters = region.span.longitudeDelta * metersPerDegreeLongitude
+                let visibleHeightMeters = region.span.latitudeDelta * 111_320
 
-                    stride(from: 0, through: geo.size.width, by: spacing).forEach { x in
-                        path.move(to: CGPoint(x: x, y: 0))
-                        path.addLine(to: CGPoint(x: x, y: geo.size.height))
-                    }
+                let pointsPerMeterX = geo.size.width / max(visibleWidthMeters, 1)
+                let pointsPerMeterY = geo.size.height / max(visibleHeightMeters, 1)
 
-                    stride(from: 0, through: geo.size.height, by: spacing).forEach { y in
-                        path.move(to: CGPoint(x: 0, y: y))
-                        path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                let spacingX: CGFloat = gridSizeMeters * pointsPerMeterX
+                let spacingY: CGFloat = gridSizeMeters * pointsPerMeterY
+
+                if spacingX >= minimumScreenSpacing && spacingY >= minimumScreenSpacing {
+                    Path { path in
+                        stride(from: 0, through: geo.size.width, by: spacingX).forEach { x in
+                            path.move(to: CGPoint(x: x, y: 0))
+                            path.addLine(to: CGPoint(x: x, y: geo.size.height))
+                        }
+
+                        stride(from: 0, through: geo.size.height, by: spacingY).forEach { y in
+                            path.move(to: CGPoint(x: 0, y: y))
+                            path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                        }
                     }
+                    .stroke(Color.blue.opacity(0.25), lineWidth: 0.5)
                 }
-                .stroke(Color.blue.opacity(0.25), lineWidth: 0.5)
             }
             .allowsHitTesting(false)
         }
