@@ -4,6 +4,8 @@ import MapKit
 import UIKit
 
 struct ContentView: View {
+    @State private var pasteStatusMessage: String? = nil
+    @State private var emergencyPhoneNumber: String = "07974919020"
     @StateObject private var locationManager = LocationManager()
     @State private var showDebug = false
     @State private var cameraPosition: MapCameraPosition = .region(
@@ -14,24 +16,31 @@ struct ContentView: View {
     )
     @State private var autoFollow = true
     @State private var showCopiedToast = false
-    @State private var pasteStatusMessage: String?
     @State private var pastedCoordinate: CLLocationCoordinate2D?
     @State private var manualInput: String = ""
     @FocusState private var manualInputFocused: Bool
+    
+    let showAdvanced = false
+    let showRecordingUI = false
+    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                Map(position: $cameraPosition, interactionModes: .all) {
-                    if locationManager.recordedLocations.count > 1 {
-                        MapPolyline(
-                            coordinates: locationManager.recordedLocations.map { $0.coordinate }
-                        )
-                        .stroke(.blue, lineWidth: 4)
+                ZStack {
+                    Map(position: $cameraPosition, interactionModes: .all) {
+                        if locationManager.recordedLocations.count > 1 {
+                            MapPolyline(
+                                coordinates: locationManager.recordedLocations.map { $0.coordinate }
+                            )
+                            .stroke(.blue, lineWidth: 4)
+                        }
+
+                        if let location = locationManager.lastLocation {
+                            Marker("You", coordinate: location.coordinate)
+                        }
                     }
 
-                    if let location = locationManager.lastLocation {
-                        Marker("You", coordinate: location.coordinate)
-                    }
+                    MapGridOverlay()
                 }
                 .frame(height: 260)
                 .onAppear {
@@ -47,54 +56,70 @@ struct ContentView: View {
                 }
 
                 ScrollView {
-                    VStack(spacing: 16) {
-                        Text("RouteBuddy Beacon")
+                    VStack(alignment: .center, spacing: 16) {
+                        Text("RouteBuddy\nBeacon")
                             .font(.largeTitle)
                             .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
 
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
                                 VStack(spacing: 6) {
                                     Text("Your Code")
-                                        .font(.system(size: 18, weight: .semibold))
+                                        .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(.primary)
-
+                                    
                                     Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
-                                        .font(.system(size: 48, weight: .heavy, design: .monospaced))
+                                        .font(.system(size: 50, weight: .heavy, design: .monospaced))
                                         .padding(.vertical, 6)
                                         .contentShape(Rectangle())
                                         .onTapGesture {
                                             let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
                                             UIPasteboard.general.string = code
-
+                                            
                                             let generator = UIImpactFeedbackGenerator(style: .light)
                                             generator.prepare()
                                             generator.impactOccurred()
-
+                                            
                                             withAnimation {
                                                 showCopiedToast = true
                                             }
-
+                                            
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
                                                 withAnimation {
                                                     showCopiedToast = false
                                                 }
                                             }
                                         }
-
+                                    
                                     HStack(spacing: 6) {
                                         Circle()
                                             .fill(.green)
                                             .frame(width: 8, height: 8)
-
+                                        
                                         Text("Live")
                                             .font(.footnote)
                                             .foregroundStyle(.secondary)
                                     }
                                 }
-
-                                VStack(spacing: 8) {
-                                    TextField("Enter location or code", text: $manualInput)
+                                
+                                Button("Send My Location") {
+                                    sendMyLocationSMS(using: fix)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                
+                                Capsule()
+                                    .fill(Color.secondary.opacity(0.4))
+                                    .frame(width: 40, height: 5)
+                                    .padding(.top, 8)
+                                    .padding(.bottom, 4)
+                                
+                                
+                                VStack(spacing: 12) {
+                                    Text("Find a Person")
+                                        .font(.headline)
+                                    
+                                    TextField("Paste location or code", text: $manualInput)
                                         .textFieldStyle(.roundedBorder)
                                         .autocorrectionDisabled()
                                         .textInputAutocapitalization(.never)
@@ -102,55 +127,65 @@ struct ContentView: View {
                                         .onSubmit {
                                             resolveManualInput()
                                         }
-
-                                    Button("Go") {
+                                    
+                                    Button("Find") {
                                         resolveManualInput()
                                     }
                                     .buttonStyle(.borderedProminent)
                                 }
-
-                                ShareLink(item: fix.quodWordsCode) {
-                                    Label("Share QuodWords", systemImage: "square.and.arrow.up")
-                                }
-
-                                Button("Paste QuodWords") {
-                                    pasteQuodWordsFromClipboard()
-                                }
-                                .buttonStyle(.bordered)
-
-                                if let pasteStatusMessage {
-                                    Text(pasteStatusMessage)
-                                        .font(.headline)
-                                        .foregroundColor(
-                                            pasteStatusMessage == "Location loaded" ? .green : .red
-                                        )
-                                }
-
-                                if let speedKPH = fix.speedKPH {
-                                    Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
-                                } else {
-                                    Text("Speed: unavailable")
-                                }
-
-                                Text("Course: \(fix.courseDescription)")
-
-                                DisclosureGroup("Debug Information", isExpanded: $showDebug) {
-                                    VStack(spacing: 6) {
-                                        Text("Latitude: \(fix.latitude, specifier: "%.6f")")
-                                        Text("Longitude: \(fix.longitude, specifier: "%.6f")")
-                                        Text("Accuracy: \(fix.accuracyDescription)")
-                                        Text("Timestamp: \(fix.timestamp.formatted())")
-                                        Text("Device ID: \(fix.asBeaconMessage().deviceID)")
-
-                                        Text("Payload keys: \(fix.asBeaconMessage().payload.keys.sorted().joined(separator: ", "))")
-                                            .font(.footnote)
-                                            .multilineTextAlignment(.center)
-                                            .foregroundStyle(.secondary)
+                                .padding()
+                                .background(.thinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .padding(.horizontal)
+                                .padding(.top, 8)
+                                
+                                // POST-BETA: Extract this entire block into AdvancedDebugView
+                                if showAdvanced {
+                                    
+                                    ShareLink(item: fix.quodWordsCode) {
+                                        Label("Share QuodWords", systemImage: "square.and.arrow.up")
                                     }
-                                    .font(.caption)
+                                    
+                                    Button("Paste QuodWords") {
+                                        pasteQuodWordsFromClipboard()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    
+                                    if let pasteStatusMessage {
+                                        Text(pasteStatusMessage)
+                                            .font(.headline)
+                                            .foregroundColor(
+                                                pasteStatusMessage == "Location loaded" ? .green : .red
+                                            )
+                                    }
+                                    
+                                    if let speedKPH = fix.speedKPH {
+                                        Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
+                                    } else {
+                                        Text("Speed: unavailable")
+                                    }
+                                    
+                                    Text("Course: \(fix.courseDescription)")
+                                    
+                                    DisclosureGroup("Debug Information", isExpanded: $showDebug) {
+                                        VStack(spacing: 6) {
+                                            Text("Latitude: \(fix.latitude, specifier: "%.6f")")
+                                            Text("Longitude: \(fix.longitude, specifier: "%.6f")")
+                                            Text("Accuracy: \(fix.accuracyDescription)")
+                                            Text("Timestamp: \(fix.timestamp.formatted())")
+                                            Text("Device ID: \(fix.asBeaconMessage().deviceID)")
+                                            
+                                            Text("Payload keys: \(fix.asBeaconMessage().payload.keys.sorted().joined(separator: ", "))")
+                                                .font(.footnote)
+                                                .multilineTextAlignment(.center)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .font(.caption)
+                                    }
+                                    .padding(.top, 6)
                                 }
-                                .padding(.top, 6)
                             }
+                            
                             .font(.title3)
 
                         } else {
@@ -164,71 +199,76 @@ struct ContentView: View {
                                 .multilineTextAlignment(.center)
                         }
 
-                        VStack(spacing: 6) {
-                            Text("Session Stats")
-                                .font(.headline)
-
-                            Text("Distance: \(locationManager.sessionStats.distanceKM, specifier: "%.3f") km")
-                            Text("Points: \(locationManager.sessionStats.pointCount)")
-                            Text("Unique Cells: \(locationManager.sessionStats.uniqueCellCount)")
-                                .foregroundStyle(.secondary)
-                            Text("Duration: \(formatDuration(locationManager.sessionStats.duration))")
-                            Text("Avg Speed: \(locationManager.sessionStats.averageSpeedKPH, specifier: "%.1f") km/h")
-                        }
-                        .font(.subheadline)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-
-                        VStack(spacing: 12) {
-                            Text("Recording state: \(recordingStateText)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-
-                            HStack(spacing: 12) {
-                                Button("Request Permission") {
-                                    locationManager.requestLocationPermission()
-                                }
-                                .buttonStyle(.borderedProminent)
-
-                                switch locationManager.recordingState {
-                                case .idle:
-                                    Button("Start Recording") {
-                                        locationManager.startRecording()
-                                    }
-                                    .buttonStyle(.bordered)
-
-                                case .recording:
-                                    Button("Pause") {
-                                        locationManager.pauseRecording()
-                                    }
-                                    .buttonStyle(.bordered)
-
-                                    Button("Stop") {
-                                        locationManager.stopRecording()
-                                    }
-                                    .buttonStyle(.borderedProminent)
-
-                                case .paused:
-                                    Button("Resume") {
-                                        locationManager.resumeRecording()
-                                    }
-                                    .buttonStyle(.bordered)
-
-                                    Button("Stop") {
-                                        locationManager.stopRecording()
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                }
+                        if showRecordingUI {
+                            VStack(spacing: 6) {
+                                Text("Session Stats")
+                                    .font(.headline)
+                                
+                                Text("Distance: \(locationManager.sessionStats.distanceKM, specifier: "%.3f") km")
+                                Text("Points: \(locationManager.sessionStats.pointCount)")
+                                Text("Unique Cells: \(locationManager.sessionStats.uniqueCellCount)")
+                                    .foregroundStyle(.secondary)
+                                Text("Duration: \(formatDuration(locationManager.sessionStats.duration))")
+                                Text("Avg Speed: \(locationManager.sessionStats.averageSpeedKPH, specifier: "%.1f") km/h")
                             }
+                            .font(.subheadline)
                             .padding()
                             .frame(maxWidth: .infinity)
                             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
                         }
-                        .padding()
+                        
+                        if showRecordingUI {
+                            VStack(spacing: 12) {
+                                Text("Recording state: \(recordingStateText)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                
+                                HStack(spacing: 12) {
+                                    Button("Request Permission") {
+                                        locationManager.requestLocationPermission()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    
+                                    switch locationManager.recordingState {
+                                    case .idle:
+                                        Button("Start Recording") {
+                                            locationManager.startRecording()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        
+                                    case .recording:
+                                        Button("Pause") {
+                                            locationManager.pauseRecording()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        
+                                        Button("Stop") {
+                                            locationManager.stopRecording()
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        
+                                    case .paused:
+                                        Button("Resume") {
+                                            locationManager.resumeRecording()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        
+                                        Button("Stop") {
+                                            locationManager.stopRecording()
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                    }
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            }
+                            .padding()
+                        }
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
 
             if showCopiedToast {
                 VStack {
@@ -252,35 +292,42 @@ struct ContentView: View {
             ShareSheet(items: locationManager.exportURLs)
         }
     }
+    
+    private struct MapGridOverlay: View {
+        var body: some View {
+            GeometryReader { geo in
+                Path { path in
+                    let spacing: CGFloat = 40
 
+                    stride(from: 0, through: geo.size.width, by: spacing).forEach { x in
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x, y: geo.size.height))
+                    }
+
+                    stride(from: 0, through: geo.size.height, by: spacing).forEach { y in
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                    }
+                }
+                .stroke(Color.blue.opacity(0.25), lineWidth: 0.5)
+            }
+            .allowsHitTesting(false)
+        }
+    }
     private func updateCameraForFollowMode() {
         guard autoFollow else {
-            if let location = locationManager.lastLocation {
-                cameraPosition = .region(
-                    MKCoordinateRegion(
-                        center: location.coordinate,
-                        span: MKCoordinateSpan(
-                            latitudeDelta: 0.01,
-                            longitudeDelta: 0.01
-                        )
-                    )
-                )
-            }
             return
         }
 
-        if let fix = locationManager.currentFix,
-           let speedKPH = fix.speedKPH,
-           speedKPH > 5,
-           fix.course != nil {
-            cameraPosition = .userLocation(
-                followsHeading: true,
-                fallback: .automatic
-            )
-        } else {
-            cameraPosition = .userLocation(
-                followsHeading: false,
-                fallback: .automatic
+        if let fix = locationManager.currentFix {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: fix.coordinate,
+                    span: MKCoordinateSpan(
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01
+                    )
+                )
             )
         }
     }
@@ -375,7 +422,47 @@ struct ContentView: View {
             return String(format: "%02d:%02d", minutes, secs)
         }
     }
+    
+    private func sendMyLocationSMS(using fix: BeaconFix) {
+        pasteStatusMessage = nil
 
+        let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+
+        guard !emergencyPhoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            pasteStatusMessage = "No phone number set"
+            return
+        }
+
+        let message = "I'm here:\n\n\(code)"
+        let encodedMessage = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let cleanedNumber = cleanPhoneNumber(emergencyPhoneNumber)
+        let smsURLString = "sms:\(cleanedNumber)&body=\(encodedMessage)"
+
+        if let url = URL(string: smsURLString) {
+            UIApplication.shared.open(url)
+        } else {
+            pasteStatusMessage = "Could not open Messages"
+        }
+        
+    }
+    private func cleanPhoneNumber(_ input: String) -> String {
+        var result = input.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if result.hasPrefix("00") {
+            result = "+" + result.dropFirst(2)
+        }
+
+        result = result.filter { $0.isNumber || $0 == "+" }
+
+        if result.hasPrefix("+") {
+            result = "+" + result.dropFirst().filter { $0.isNumber }
+        } else {
+            result = result.filter { $0.isNumber }
+        }
+
+        return result
+    }
+    
     private var recordingStateText: String {
         switch locationManager.recordingState {
         case .idle:
