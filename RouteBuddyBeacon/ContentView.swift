@@ -127,6 +127,7 @@ struct ContentView: View {
                                 VStack(spacing: 12) {
                                     Text("Find a Person")
                                         .font(.headline)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     
                                     TextField("Paste location or code", text: $manualInput)
                                         .textFieldStyle(.roundedBorder)
@@ -143,10 +144,9 @@ struct ContentView: View {
                                     .buttonStyle(.borderedProminent)
                                 }
                                 .padding()
-                                .background(.thinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .frame(maxWidth: .infinity)
+                                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
                                 .padding(.horizontal)
-                                .padding(.top, 8)
                                 
                                 // POST-BETA: Extract this entire block into AdvancedDebugView
                                 if showAdvanced {
