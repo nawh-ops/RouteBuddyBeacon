@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var pastedCoordinate: CLLocationCoordinate2D?
     @State private var manualInput: String = ""
     @FocusState private var manualInputFocused: Bool
+    @State private var showPhoneticCode = false
     
     let showAdvanced = false
     let showRecordingUI = false
@@ -42,12 +43,12 @@ struct ContentView: View {
                             )
                             .stroke(.blue, lineWidth: 4)
                         }
-
+                        
                         if let location = locationManager.lastLocation {
                             Marker("You", coordinate: location.coordinate)
                         }
                     }
-
+                    
                     MapGridOverlay(region: currentGridRegion)
                 }
                 .frame(height: 260)
@@ -62,14 +63,14 @@ struct ContentView: View {
                         updateCameraForFollowMode()
                     }
                 }
-
+                
                 ScrollView {
                     VStack(alignment: .center, spacing: 16) {
                         Text("RouteBuddy\nBeacon")
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
-
+                        
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
                                 VStack(spacing: 6) {
@@ -100,6 +101,17 @@ struct ContentView: View {
                                                 }
                                             }
                                         }
+                                    
+                                    HStack {
+                                        Button("Spell Code") {
+                                            showPhoneticCode = true
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .font(.footnote)
+
+                                        Spacer()
+                                    }
+                                    .padding(.top, 4)
                                     
                                     HStack(spacing: 6) {
                                         Circle()
@@ -208,18 +220,18 @@ struct ContentView: View {
                             .padding(.horizontal)
                             
                             .font(.title3)
-
+                            
                         } else {
                             Text("Waiting for location...")
                                 .foregroundStyle(.secondary)
                         }
-
+                        
                         if let errorMessage = locationManager.errorMessage {
                             Text(errorMessage)
                                 .foregroundStyle(.red)
                                 .multilineTextAlignment(.center)
                         }
-
+                        
                         if showRecordingUI {
                             VStack(spacing: 6) {
                                 Text("Session Stats")
@@ -290,11 +302,11 @@ struct ContentView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-
+            
             if showCopiedToast {
                 VStack {
                     Spacer()
-
+                    
                     Text("Copied")
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.white)
@@ -312,9 +324,16 @@ struct ContentView: View {
         }) {
             ShareSheet(items: locationManager.exportURLs)
         }
+        .alert("Spell Code", isPresented: $showPhoneticCode) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            if let fix = locationManager.currentFix {
+                let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+                Text("\(code)\n\n\(phoneticCode(code))")
+            }
+        }
     }
-    
-    private struct MapGridOverlay: View {
+        private struct MapGridOverlay: View {
         let region: MKCoordinateRegion
         private let gridSizeMeters: CLLocationDistance = 9
         private let minimumScreenSpacing: CGFloat = 12
@@ -469,6 +488,24 @@ struct ContentView: View {
         } else {
             return String(format: "%02d:%02d", minutes, secs)
         }
+    }
+    
+    private func phoneticCode(_ code: String) -> String {
+        let words: [Character: String] = [
+            "A": "Alpha", "B": "Bravo", "C": "Charlie", "D": "Delta",
+            "E": "Echo", "F": "Foxtrot", "G": "Golf", "H": "Hotel",
+            "I": "India", "J": "Juliett", "K": "Kilo", "L": "Lima",
+            "M": "Mike", "N": "November", "O": "Oscar", "P": "Papa",
+            "Q": "Quebec", "R": "Romeo", "S": "Sierra", "T": "Tango",
+            "U": "Uniform", "V": "Victor", "W": "Whiskey", "X": "X-ray",
+            "Y": "Yankee", "Z": "Zulu",
+            "0": "Zero", "1": "One", "2": "Two", "3": "Three", "4": "Four",
+            "5": "Five", "6": "Six", "7": "Seven", "8": "Eight", "9": "Nine"
+        ]
+
+        return code.uppercased()
+            .compactMap { words[$0] }
+            .joined(separator: " ")
     }
     
     private func sendMyLocationSMS(using fix: BeaconFix) {
