@@ -112,10 +112,16 @@ struct ContentView: View {
                                     }
                                 }
                                 
-                                Button("Send My Location") {
-                                    sendMyLocationSMS(using: fix)
+                                VStack(spacing: 8) {
+                                    Text("Navigate To Me")
+                                        .font(.headline)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    
+                                    Button("Share Route") {
+                                        sendMyLocationSMS(using: fix)
+                                    }
+                                    .buttonStyle(.borderedProminent)
                                 }
-                                .buttonStyle(.borderedProminent)
                                 
                                 Capsule()
                                     .fill(Color.secondary.opacity(0.4))
