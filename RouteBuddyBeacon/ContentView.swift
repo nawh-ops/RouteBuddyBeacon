@@ -462,15 +462,17 @@ struct ContentView: View {
     private func sendMyLocationSMS(using fix: BeaconFix) {
         pasteStatusMessage = nil
 
-        let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
-
         guard !emergencyPhoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             pasteStatusMessage = "No phone number set"
             return
         }
 
-        let message = "I'm here:\n\n\(code)"
-        let encodedMessage = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let introMessage = "I'm here"
+        let codeMessage = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+        let message = "\(introMessage)\n\n\(codeMessage)"
+
+        let encodedMessage =
+            message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let cleanedNumber = cleanPhoneNumber(emergencyPhoneNumber)
         let smsURLString = "sms:\(cleanedNumber)&body=\(encodedMessage)"
 
