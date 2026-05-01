@@ -120,8 +120,10 @@ struct ContentView: View {
                                     Button("Share Route") {
                                         sendMyLocationSMS(using: fix)
                                     }
-                                    .buttonStyle(.borderedProminent)
+                                    .buttonStyle(.bordered)
                                 }
+                                .padding(.horizontal)
+                                .padding(.top, 4)
                                 
                                 Capsule()
                                     .fill(Color.secondary.opacity(0.4))
