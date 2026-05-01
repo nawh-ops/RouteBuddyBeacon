@@ -73,9 +73,10 @@ struct ContentView: View {
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
                                 VStack(spacing: 6) {
-                                    Text("Your Code")
+                                    Text("Your Location")
                                         .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(.primary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     
                                     Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
                                         .font(.system(size: 50, weight: .heavy, design: .monospaced))
@@ -193,6 +194,10 @@ struct ContentView: View {
                                     .padding(.top, 6)
                                 }
                             }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            .padding(.horizontal)
                             
                             .font(.title3)
 
