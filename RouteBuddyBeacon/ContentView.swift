@@ -406,6 +406,7 @@ struct ContentView: View {
     
     private func resolveManualInput() {
         manualInputFocused = false
+
         let trimmed = manualInput.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmed.isEmpty else {
@@ -416,30 +417,41 @@ struct ContentView: View {
             return
         }
 
-        guard let coordinate = QuodWordsResolver.resolve(trimmed) else {
-            pasteStatusMessage = "Invalid location"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                pasteStatusMessage = nil
+        let separators = CharacterSet.whitespacesAndNewlines
+            .union(.punctuationCharacters)
+
+        let candidates = trimmed
+            .components(separatedBy: separators)
+            .map { $0.uppercased() }
+            .filter { !$0.isEmpty }
+
+        for candidate in candidates {
+            if let coordinate = QuodWordsResolver.resolve(candidate) {
+                pastedCoordinate = coordinate
+                autoFollow = false
+
+                cameraPosition = .region(
+                    MKCoordinateRegion(
+                        center: coordinate,
+                        span: MKCoordinateSpan(
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01
+                        )
+                    )
+                )
+
+                manualInput = ""
+                pasteStatusMessage = "Location loaded"
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    pasteStatusMessage = nil
+                }
+
+                return
             }
-            return
         }
 
-        pastedCoordinate = coordinate
-        autoFollow = false
-
-        cameraPosition = .region(
-            MKCoordinateRegion(
-                center: coordinate,
-                span: MKCoordinateSpan(
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01
-                )
-            )
-        )
-
-        manualInput = ""
-        pasteStatusMessage = "Location loaded"
-       
+        pasteStatusMessage = "Invalid location"
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
             pasteStatusMessage = nil
         }
