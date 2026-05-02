@@ -2,6 +2,7 @@ import SwiftUI
 import CoreLocation
 import MapKit
 import UIKit
+import AVFoundation
 
 struct ContentView: View {
     @State private var pasteStatusMessage: String? = nil
@@ -20,6 +21,7 @@ struct ContentView: View {
     @State private var manualInput: String = ""
     @FocusState private var manualInputFocused: Bool
     @State private var showPhoneticCode = false
+    @State private var speechSynthesizer = AVSpeechSynthesizer()
     
     let showAdvanced = false
     let showRecordingUI = false
@@ -77,7 +79,7 @@ struct ContentView: View {
                                     Text("Your Location")
                                         .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(.primary)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .frame(maxWidth: .infinity, alignment: .center)
                                     
                                     Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
                                         .font(.system(size: 50, weight: .heavy, design: .monospaced))
@@ -108,8 +110,18 @@ struct ContentView: View {
                                         }
                                         .buttonStyle(.bordered)
                                         .font(.footnote)
-
+                                        
                                         Spacer()
+                                        
+                                        Button("Speak Code") {
+                                            let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+                                            let spoken = phoneticCode(code)
+                                                .replacingOccurrences(of: " ", with: ", ")
+                                            
+                                            speak(spoken)
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .font(.footnote)
                                     }
                                     .padding(.top, 4)
                                     
@@ -500,12 +512,21 @@ struct ContentView: View {
             "U": "Uniform", "V": "Victor", "W": "Whiskey", "X": "X-ray",
             "Y": "Yankee", "Z": "Zulu",
             "0": "Zero", "1": "One", "2": "Two", "3": "Three", "4": "Four",
-            "5": "Five", "6": "Six", "7": "Seven", "8": "Eight", "9": "Nine"
+            "5": "Fife", "6": "Six", "7": "Seven", "8": "Eight", "9": "Niner"
         ]
 
         return code.uppercased()
             .compactMap { words[$0] }
             .joined(separator: " ")
+    }
+    
+    private func speak(_ text: String) {
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-GB")
+        utterance.rate = 0.5
+
+        speechSynthesizer.stopSpeaking(at: .immediate)
+        speechSynthesizer.speak(utterance)
     }
     
     private func sendMyLocationSMS(using fix: BeaconFix) {
