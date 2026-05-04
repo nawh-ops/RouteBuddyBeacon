@@ -76,7 +76,7 @@ struct ContentView: View {
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
                                 VStack(spacing: 6) {
-                                    Text("Your Location")
+                                    Text("Your Quodwords Location")
                                         .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity, alignment: .center)
@@ -141,8 +141,8 @@ struct ContentView: View {
                                         .font(.headline)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     
-                                    Button("Share Route") {
-                                        sendMyLocationSMS(using: fix)
+                                    Button("Navigate To Me") {
+                                        sendNavigateToMeSMS(using: fix)
                                     }
                                     .buttonStyle(.bordered)
                                 }
@@ -529,6 +529,16 @@ struct ContentView: View {
         speechSynthesizer.speak(utterance)
     }
     
+    private func openAppleMapsRoute(to coordinate: CLLocationCoordinate2D) {
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = "RouteBuddy Beacon Location"
+
+        mapItem.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
+        ])
+    }
+    
     private func sendMyLocationSMS(using fix: BeaconFix) {
         pasteStatusMessage = nil
 
@@ -544,7 +554,7 @@ struct ContentView: View {
         let encodedMessage =
             message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let cleanedNumber = cleanPhoneNumber(emergencyPhoneNumber)
-        let smsURLString = "sms:\(cleanedNumber)&body=\(encodedMessage)"
+        let smsURLString = "sms:\(cleanedNumber)?body=\(encodedMessage)"
 
         if let url = URL(string: smsURLString) {
             UIApplication.shared.open(url)
@@ -569,6 +579,44 @@ struct ContentView: View {
         }
 
         return result
+    }
+    
+    private func sendNavigateToMeSMS(using fix: BeaconFix) {
+        pasteStatusMessage = nil
+
+        guard !emergencyPhoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            pasteStatusMessage = "No phone number set"
+            return
+        }
+
+        let coordinate = fix.coordinate
+
+        let lat = coordinate.latitude
+        let lon = coordinate.longitude
+
+        let mapsURL = "http://maps.apple.com/?daddr=\(lat),\(lon)"
+
+        let message = """
+        Navigate to me:
+        \(mapsURL)
+
+        Code: \(QuodWordsResolver.encodeTAQ56(from: coordinate))
+        """
+
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "&=?+")
+
+        let encodedMessage =
+            message.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+
+        let cleanedNumber = cleanPhoneNumber(emergencyPhoneNumber)
+        let smsURLString = "sms:\(cleanedNumber)?body=\(encodedMessage)"
+
+        if let url = URL(string: smsURLString) {
+            UIApplication.shared.open(url)
+        } else {
+            pasteStatusMessage = "Could not open Messages"
+        }
     }
     
     private var recordingStateText: String {
