@@ -22,6 +22,7 @@ struct ContentView: View {
     @FocusState private var manualInputFocused: Bool
     @State private var showPhoneticCode = false
     @State private var speechSynthesizer = AVSpeechSynthesizer()
+    @State private var isPulsing = false
     
     let showAdvanced = false
     let showRecordingUI = false
@@ -76,7 +77,7 @@ struct ContentView: View {
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
                                 VStack(spacing: 6) {
-                                    Text("Your Quodwords Location")
+                                    Text("Your QuodWords Location")
                                         .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity, alignment: .center)
@@ -84,6 +85,7 @@ struct ContentView: View {
                                     Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
                                         .font(.system(size: 50, weight: .heavy, design: .monospaced))
                                         .padding(.vertical, 6)
+                                        .padding(.bottom, 12)
                                         .contentShape(Rectangle())
                                         .onTapGesture {
                                             let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
@@ -123,43 +125,49 @@ struct ContentView: View {
                                         .buttonStyle(.bordered)
                                         .font(.footnote)
                                     }
+                                    .padding(.bottom, 12)
                                     .padding(.top, 4)
-                                    
-                                    HStack(spacing: 6) {
-                                        Circle()
-                                            .fill(.green)
-                                            .frame(width: 8, height: 8)
-                                        
-                                        Text("Live")
-                                            .font(.footnote)
-                                            .foregroundStyle(.secondary)
+
+                                    let fix = locationManager.currentFix
+
+                                    Group {
+                                        if fix != nil {
+                                            HStack(spacing: 6) {
+                                                Circle()
+                                                    .fill(Color.green)
+                                                    .frame(width: 8, height: 8)
+
+                                                Text("Live")
+                                                    .font(.footnote)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        } else {
+                                            HStack(spacing: 6) {
+                                                Circle()
+                                                    .fill(Color.red)
+                                                    .frame(width: 8, height: 8)
+
+                                                Text("Waiting for GPS…")
+                                                    .font(.footnote)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
                                     }
-                                }
-                                
-                                VStack(spacing: 8) {
-                                    Text("Navigate To Me")
-                                        .font(.headline)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.bottom, 40)
                                     
-                                    Button("Navigate To Me") {
-                                        sendNavigateToMeSMS(using: fix)
-                                    }
-                                    .buttonStyle(.bordered)
+                                    
+                                    Rectangle()
+                                        .fill(Color(.systemGray4))
+                                        .frame(height: 1.5)
+                                        .opacity(0.5)
+                                        .padding(.horizontal)
+                                        .padding(.bottom, 20)
                                 }
-                                .padding(.horizontal)
-                                .padding(.top, 4)
-                                
-                                Capsule()
-                                    .fill(Color.secondary.opacity(0.4))
-                                    .frame(width: 40, height: 5)
-                                    .padding(.top, 8)
-                                    .padding(.bottom, 4)
-                                
                                 
                                 VStack(spacing: 12) {
                                     Text("Find a Person")
                                         .font(.headline)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .frame(maxWidth: .infinity, alignment: .center)
                                     
                                     TextField("Paste location or code", text: $manualInput)
                                         .textFieldStyle(.roundedBorder)
@@ -175,6 +183,29 @@ struct ContentView: View {
                                     }
                                     .buttonStyle(.borderedProminent)
                                 }
+                                
+                                Divider()
+                                    .padding(.vertical, 16)
+                                
+                                VStack(spacing: 8) {
+                                    Text("Navigate To Me")
+                                        .font(.headline)
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                    
+                                    Button("Navigate To Me") {
+                                        sendNavigateToMeSMS(using: fix)
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                                .padding(.horizontal)
+                                .padding(.top, 4)
+                                
+                                Capsule()
+                                    .fill(Color.secondary.opacity(0.4))
+                                    .frame(width: 40, height: 5)
+                                    .padding(.top, 8)
+                                    .padding(.bottom, 4)
+                                
                                 .padding()
                                 .frame(maxWidth: .infinity)
                                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
@@ -191,6 +222,7 @@ struct ContentView: View {
                                         pasteQuodWordsFromClipboard()
                                     }
                                     .buttonStyle(.bordered)
+                                    .font(.footnote.weight(.semibold))
                                     
                                     if let pasteStatusMessage {
                                         Text(pasteStatusMessage)
@@ -527,16 +559,6 @@ struct ContentView: View {
 
         speechSynthesizer.stopSpeaking(at: .immediate)
         speechSynthesizer.speak(utterance)
-    }
-    
-    private func openAppleMapsRoute(to coordinate: CLLocationCoordinate2D) {
-        let placemark = MKPlacemark(coordinate: coordinate)
-        let mapItem = MKMapItem(placemark: placemark)
-        mapItem.name = "RouteBuddy Beacon Location"
-
-        mapItem.openInMaps(launchOptions: [
-            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
-        ])
     }
     
     private func sendMyLocationSMS(using fix: BeaconFix) {
