@@ -39,9 +39,9 @@ struct ContentView: View {
         ZStack {
             VStack(spacing: 0) {
                 
-                ZStack(alignment: .topTrailing) {
+                ZStack(alignment: .bottomTrailing) {
                     
-                    Map(position: $cameraPosition, interactionModes: .all) {
+                    Map(position: $cameraPosition, interactionModes: [.pan, .zoom]) {
                         if locationManager.recordedLocations.count > 1 {
                             MapPolyline(
                                 coordinates: locationManager.recordedLocations.map { $0.coordinate }
@@ -55,6 +55,8 @@ struct ContentView: View {
                     }
                     
                     MapGridOverlay(region: currentGridRegion)
+                        .allowsHitTesting(false)
+                        .opacity(0.9)
                     
                     Button {
                         recenterOnUser()
@@ -399,8 +401,8 @@ struct ContentView: View {
     }
         private struct MapGridOverlay: View {
         let region: MKCoordinateRegion
-        private let gridSizeMeters: CLLocationDistance = 9
-        private let minimumScreenSpacing: CGFloat = 12
+        private let gridSizeMeters: CLLocationDistance = 50
+            private let minimumScreenSpacing: CGFloat = 8
 
         var body: some View {
             GeometryReader { geo in
@@ -415,7 +417,7 @@ struct ContentView: View {
                 let spacingX: CGFloat = gridSizeMeters * pointsPerMeterX
                 let spacingY: CGFloat = gridSizeMeters * pointsPerMeterY
 
-                if spacingX >= minimumScreenSpacing && spacingY >= minimumScreenSpacing {
+                if spacingX >= minimumScreenSpacing && spacingY >= minimumScreenSpacing && spacingX < 80 {
                     Path { path in
                         stride(from: 0, through: geo.size.width, by: spacingX).forEach { x in
                             path.move(to: CGPoint(x: x, y: 0))
@@ -427,7 +429,7 @@ struct ContentView: View {
                             path.addLine(to: CGPoint(x: geo.size.width, y: y))
                         }
                     }
-                    .stroke(Color.blue.opacity(0.25), lineWidth: 0.5)
+                    .stroke(Color.black.opacity(0.28), lineWidth: 0.75)
                 }
             }
             .allowsHitTesting(false)
@@ -673,7 +675,7 @@ struct ContentView: View {
         Navigate to me:
         \(mapsURL)
 
-        Code: \(QuodWordsResolver.encodeTAQ56(from: coordinate))
+        Your QuodWords Code: \(QuodWordsResolver.encodeTAQ56(from: coordinate))
         """
 
         var allowed = CharacterSet.urlQueryAllowed
