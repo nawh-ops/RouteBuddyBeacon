@@ -598,7 +598,7 @@ struct ContentView: View {
         let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
 
         let message = """
-        My location:
+        My QuodWords:
         \(code)
         """
 
