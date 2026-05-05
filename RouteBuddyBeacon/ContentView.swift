@@ -38,7 +38,9 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                ZStack {
+                
+                ZStack(alignment: .topTrailing) {
+                    
                     Map(position: $cameraPosition, interactionModes: .all) {
                         if locationManager.recordedLocations.count > 1 {
                             MapPolyline(
@@ -53,14 +55,27 @@ struct ContentView: View {
                     }
                     
                     MapGridOverlay(region: currentGridRegion)
+                    
+                    Button {
+                        recenterOnUser()
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                    }
+                    .padding(12)
+                    
                 }
+                
                 .frame(height: 260)
-                .onAppear {
-                    updateCameraForFollowMode()
+                .onMapCameraChange(frequency: .onEnd) { _ in
+                    autoFollow = false
                 }
-                .onChange(of: autoFollow) {
-                    updateCameraForFollowMode()
-                }
+                .onAppear { updateCameraForFollowMode() }
+                .onChange(of: autoFollow) { updateCameraForFollowMode() }
                 .onChange(of: locationManager.lastLocation) {
                     if autoFollow {
                         updateCameraForFollowMode()
@@ -431,6 +446,17 @@ struct ContentView: View {
                         latitudeDelta: 0.01,
                         longitudeDelta: 0.01
                     )
+                )
+            )
+        }
+    }
+    
+    private func recenterOnUser() {
+        if let fix = locationManager.currentFix {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: fix.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
                 )
             )
         }
