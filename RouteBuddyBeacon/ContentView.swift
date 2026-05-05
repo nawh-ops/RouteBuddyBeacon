@@ -106,14 +106,18 @@ struct ContentView: View {
                                             }
                                         }
                                     
-                                    HStack {
+                                    Button("Send Location") {
+                                        sendLocation()
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 12) {
                                         Button("Spell Code") {
                                             showPhoneticCode = true
                                         }
                                         .buttonStyle(.bordered)
                                         .font(.footnote)
-                                        
-                                        Spacer()
                                         
                                         Button("Speak Code") {
                                             let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
@@ -124,6 +128,7 @@ struct ContentView: View {
                                         }
                                         .buttonStyle(.bordered)
                                         .font(.footnote)
+                                        .padding(.top, 8)
                                     }
                                     .padding(.bottom, 12)
                                     .padding(.top, 4)
@@ -559,6 +564,26 @@ struct ContentView: View {
 
         speechSynthesizer.stopSpeaking(at: .immediate)
         speechSynthesizer.speak(utterance)
+    }
+    
+    private func sendLocation() {
+        guard let fix = locationManager.currentFix else { return }
+
+        let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+
+        let message = """
+        My location:
+        \(code)
+        """
+
+        let encodedMessage =
+            message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+
+        let smsURLString = "sms:?body=\(encodedMessage)"
+
+        if let url = URL(string: smsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
     
     private func sendMyLocationSMS(using fix: BeaconFix) {
