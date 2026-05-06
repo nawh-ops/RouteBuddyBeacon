@@ -23,19 +23,17 @@ struct ContentView: View {
     @State private var showPhoneticCode = false
     @State private var speechSynthesizer = AVSpeechSynthesizer()
     @State private var isPulsing = false
-    
-    let showAdvanced = false
-    let showRecordingUI = false
-    
-    private var currentGridRegion: MKCoordinateRegion {
-        MKCoordinateRegion(
-            center: locationManager.currentFix?.coordinate
-                ?? CLLocationCoordinate2D(latitude: 52.5, longitude: -1.5),
-            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-        )
-    }
+    @State private var showAdvanced = false
+    @State private var showRecordingUI = false
+
+    @State private var currentGridRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 52.5, longitude: -1.5),
+        span: MKCoordinateSpan(latitudeDelta: 0.01,
+                               longitudeDelta: 0.01)
+    )
 
     var body: some View {
+        
         ZStack {
             VStack(spacing: 0) {
                 
@@ -73,6 +71,10 @@ struct ContentView: View {
                 }
                 
                 .frame(height: 260)
+                .clipped()
+                .onMapCameraChange(frequency: .continuous) { context in
+                    currentGridRegion = context.region
+                }
                 .onMapCameraChange(frequency: .onEnd) { _ in
                     autoFollow = false
                 }
@@ -183,7 +185,7 @@ struct ContentView: View {
                                         .frame(height: 1.5)
                                         .opacity(0.5)
                                         .padding(.horizontal)
-                                        .padding(.bottom, 20)
+                                        .padding(.bottom, 12)
                                 }
                                 
                                 VStack(spacing: 12) {
@@ -401,39 +403,61 @@ struct ContentView: View {
     }
         private struct MapGridOverlay: View {
         let region: MKCoordinateRegion
-        private let gridSizeMeters: CLLocationDistance = 50
+        private let gridSizeMeters: CLLocationDistance = 3
             private let minimumScreenSpacing: CGFloat = 8
 
-        var body: some View {
-            GeometryReader { geo in
-                let centerLatitudeRadians = region.center.latitude * .pi / 180
-                let metersPerDegreeLongitude = 111_320 * cos(centerLatitudeRadians)
-                let visibleWidthMeters = region.span.longitudeDelta * metersPerDegreeLongitude
-                let visibleHeightMeters = region.span.latitudeDelta * 111_320
+            var body: some View {
+                GeometryReader { geo in
+                    let centerLatitudeRadians = region.center.latitude * .pi / 180
 
-                let pointsPerMeterX = geo.size.width / max(visibleWidthMeters, 1)
-                let pointsPerMeterY = geo.size.height / max(visibleHeightMeters, 1)
+                    let metersPerDegreeLat = 111_320.0
+                    let metersPerDegreeLon = 111_320.0 * cos(centerLatitudeRadians)
 
-                let spacingX: CGFloat = gridSizeMeters * pointsPerMeterX
-                let spacingY: CGFloat = gridSizeMeters * pointsPerMeterY
+                    let visibleWidthMeters = region.span.longitudeDelta * metersPerDegreeLon
+                    let visibleHeightMeters = region.span.latitudeDelta * metersPerDegreeLat
 
-                if spacingX >= minimumScreenSpacing && spacingY >= minimumScreenSpacing && spacingX < 80 {
-                    Path { path in
-                        stride(from: 0, through: geo.size.width, by: spacingX).forEach { x in
-                            path.move(to: CGPoint(x: x, y: 0))
-                            path.addLine(to: CGPoint(x: x, y: geo.size.height))
+                    let pointsPerMeterX = geo.size.width / max(visibleWidthMeters, 1)
+                    let pointsPerMeterY = geo.size.height / max(visibleHeightMeters, 1)
+
+                    let spacingX: CGFloat = gridSizeMeters * pointsPerMeterX
+                    let spacingY: CGFloat = gridSizeMeters * pointsPerMeterY
+
+                    let startLon = region.center.longitude - region.span.longitudeDelta / 2
+                    let startLat = region.center.latitude - region.span.latitudeDelta / 2
+
+                    let gridSizeDegreesLat = gridSizeMeters / metersPerDegreeLat
+                    let gridSizeDegreesLon = gridSizeMeters / metersPerDegreeLon
+
+                    let alignedStartLon = floor(startLon / gridSizeDegreesLon) * gridSizeDegreesLon
+                    let alignedStartLat = floor(startLat / gridSizeDegreesLat) * gridSizeDegreesLat
+
+                    if spacingX >= minimumScreenSpacing && spacingY >= minimumScreenSpacing && spacingX < 80 {
+                        Path { path in
+                            stride(
+                                from: alignedStartLon,
+                                through: startLon + region.span.longitudeDelta,
+                                by: gridSizeDegreesLon
+                            ).forEach { lon in
+                                let x = CGFloat((lon - startLon) / region.span.longitudeDelta) * geo.size.width
+                                path.move(to: CGPoint(x: x, y: 0))
+                                path.addLine(to: CGPoint(x: x, y: geo.size.height))
+                            }
+
+                            stride(
+                                from: alignedStartLat,
+                                through: startLat + region.span.latitudeDelta,
+                                by: gridSizeDegreesLat
+                            ).forEach { lat in
+                                let y = CGFloat(1 - (lat - startLat) / region.span.latitudeDelta) * geo.size.height
+                                path.move(to: CGPoint(x: 0, y: y))
+                                path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                            }
                         }
-
-                        stride(from: 0, through: geo.size.height, by: spacingY).forEach { y in
-                            path.move(to: CGPoint(x: 0, y: y))
-                            path.addLine(to: CGPoint(x: geo.size.width, y: y))
-                        }
+                        .stroke(Color.black.opacity(0.28), lineWidth: 0.75)
                     }
-                    .stroke(Color.black.opacity(0.28), lineWidth: 0.75)
                 }
+                .allowsHitTesting(false)
             }
-            .allowsHitTesting(false)
-        }
     }
     private func updateCameraForFollowMode() {
         guard autoFollow else {
@@ -600,7 +624,8 @@ struct ContentView: View {
         let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
 
         let message = """
-        My QuodWords:
+        My QuodWords Code:
+
         \(code)
         """
 
