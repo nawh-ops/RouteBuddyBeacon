@@ -101,13 +101,13 @@ struct ContentView: View {
                                         .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity, alignment: .center)
                                     
-                                    Text(QuodWordsResolver.encodeTAQ56(from: fix.coordinate))
+                                    Text(QuodWordsEncoder.shortCode(from: fix.coordinate))
                                         .font(.system(size: 50, weight: .heavy, design: .monospaced))
                                         .padding(.vertical, 6)
                                         .padding(.bottom, 12)
                                         .contentShape(Rectangle())
                                         .onTapGesture {
-                                            let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+                                            let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
                                             UIPasteboard.general.string = code
                                             
                                             let generator = UIImpactFeedbackGenerator(style: .light)
@@ -139,7 +139,7 @@ struct ContentView: View {
                                         .font(.footnote)
                                         
                                         Button("Speak Code") {
-                                            let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+                                            let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
                                             let spoken = phoneticCode(code)
                                                 .replacingOccurrences(of: " ", with: ", ")
                                             
@@ -396,7 +396,7 @@ struct ContentView: View {
             Button("OK", role: .cancel) { }
         } message: {
             if let fix = locationManager.currentFix {
-                let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+                let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
                 Text("\(code)\n\n\(phoneticCode(code))")
             }
         }
@@ -621,7 +621,7 @@ struct ContentView: View {
     private func sendLocation() {
         guard let fix = locationManager.currentFix else { return }
 
-        let code = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+        let code = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
 
         let message = """
         My QuodWords Code:
@@ -648,7 +648,7 @@ struct ContentView: View {
         }
 
         let introMessage = "I'm here"
-        let codeMessage = QuodWordsResolver.encodeTAQ56(from: fix.coordinate)
+        let codeMessage = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
         let message = "\(introMessage)\n\n\(codeMessage)"
 
         let encodedMessage =
@@ -700,7 +700,7 @@ struct ContentView: View {
         Navigate to me:
         \(mapsURL)
 
-        Your QuodWords Code: \(QuodWordsResolver.encodeTAQ56(from: coordinate))
+        Your QuodWords Code: \(QuodWordsEncoder.fullAreaCode(from: coordinate))
         """
 
         var allowed = CharacterSet.urlQueryAllowed
