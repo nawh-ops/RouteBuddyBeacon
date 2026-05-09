@@ -52,7 +52,13 @@ struct ContentView: View {
                         }
                     }
                     
-                    // MapGridOverlay disabled: heavy dense grid caused memory issue.
+                    if let location = locationManager.lastLocation {
+                        CurrentCellHighlightOverlay(
+                            region: currentGridRegion,
+                            coordinate: location.coordinate
+                        )
+                        .allowsHitTesting(false)
+                    }
                     
                     Button {
                         recenterOnUser()
@@ -399,6 +405,107 @@ struct ContentView: View {
             }
         }
     }
+
+        private struct CurrentCellHighlightOverlay: View {
+            let region: MKCoordinateRegion
+            let coordinate: CLLocationCoordinate2D
+
+            private let originLatitude = 49.5
+            private let originLongitude = -8.5
+            private let projectionLatitude = 55.0
+            private let metersPerDegreeLatitude = 111_320.0
+            private let cellSizeMeters = 30.0
+
+            private var metersPerDegreeLongitude: Double {
+                metersPerDegreeLatitude * cos(projectionLatitude * .pi / 180.0)
+            }
+
+            var body: some View {
+                GeometryReader { geo in
+                    Canvas { context, size in
+                        guard let rect = currentCellScreenRect(size: size) else {
+                            return
+                        }
+
+                        var path = Path()
+                        path.addRect(rect)
+
+                        context.fill(
+                            path,
+                            with: .color(Color.yellow.opacity(0.18))
+                        )
+
+                        context.stroke(
+                            path,
+                            with: .color(Color.yellow.opacity(0.95)),
+                            lineWidth: 3
+                        )
+                    }
+                    .frame(width: geo.size.width, height: geo.size.height)
+                }
+            }
+
+            private func currentCellScreenRect(size: CGSize) -> CGRect? {
+                guard region.span.latitudeDelta > 0,
+                      region.span.longitudeDelta > 0 else {
+                    return nil
+                }
+
+                let xMeters = (coordinate.longitude - originLongitude) * metersPerDegreeLongitude
+                let yMeters = (coordinate.latitude - originLatitude) * metersPerDegreeLatitude
+
+                let cellX = floor(xMeters / cellSizeMeters) * cellSizeMeters
+                let cellY = floor(yMeters / cellSizeMeters) * cellSizeMeters
+
+                let minLon = originLongitude + cellX / metersPerDegreeLongitude
+                let maxLon = originLongitude + (cellX + cellSizeMeters) / metersPerDegreeLongitude
+                let minLat = originLatitude + cellY / metersPerDegreeLatitude
+                let maxLat = originLatitude + (cellY + cellSizeMeters) / metersPerDegreeLatitude
+
+                let topLeft = screenPoint(
+                    latitude: maxLat,
+                    longitude: minLon,
+                    size: size
+                )
+
+                let bottomRight = screenPoint(
+                    latitude: minLat,
+                    longitude: maxLon,
+                    size: size
+                )
+
+                let rect = CGRect(
+                    x: min(topLeft.x, bottomRight.x),
+                    y: min(topLeft.y, bottomRight.y),
+                    width: abs(bottomRight.x - topLeft.x),
+                    height: abs(bottomRight.y - topLeft.y)
+                )
+
+                guard rect.maxX >= 0,
+                      rect.maxY >= 0,
+                      rect.minX <= size.width,
+                      rect.minY <= size.height else {
+                    return nil
+                }
+
+                return rect
+            }
+
+            private func screenPoint(
+                latitude: Double,
+                longitude: Double,
+                size: CGSize
+            ) -> CGPoint {
+                let minLon = region.center.longitude - region.span.longitudeDelta / 2.0
+                let maxLat = region.center.latitude + region.span.latitudeDelta / 2.0
+
+                let x = ((longitude - minLon) / region.span.longitudeDelta) * size.width
+                let y = ((maxLat - latitude) / region.span.latitudeDelta) * size.height
+
+                return CGPoint(x: x, y: y)
+            }
+        }
+
         private struct MapGridOverlay: View {
         let region: MKCoordinateRegion
         private let gridSizeMeters: CLLocationDistance = 3
