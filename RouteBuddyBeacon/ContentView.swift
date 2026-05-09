@@ -136,6 +136,27 @@ struct ContentView: View {
                                     .padding(.bottom, 12)
                                     
                                     HStack(spacing: 12) {
+                                        Button("Copy Cell") {
+                                            let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                            UIPasteboard.general.string = code
+                                            
+                                            let generator = UIImpactFeedbackGenerator(style: .light)
+                                            generator.prepare()
+                                            generator.impactOccurred()
+                                            
+                                            withAnimation {
+                                                showCopiedToast = true
+                                            }
+                                            
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                                                withAnimation {
+                                                    showCopiedToast = false
+                                                }
+                                            }
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                        .font(.footnote)
+                                        
                                         Button("Spell Code") {
                                             showPhoneticCode = true
                                         }
@@ -151,7 +172,6 @@ struct ContentView: View {
                                         }
                                         .buttonStyle(.bordered)
                                         .font(.footnote)
-                                        .padding(.top, 8)
                                     }
                                     .padding(.bottom, 12)
                                     .padding(.top, 4)
