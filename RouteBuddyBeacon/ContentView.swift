@@ -52,9 +52,7 @@ struct ContentView: View {
                         }
                     }
                     
-                    MapGridOverlay(region: currentGridRegion)
-                        .allowsHitTesting(false)
-                        .opacity(0.9)
+                    // MapGridOverlay disabled: heavy dense grid caused memory issue.
                     
                     Button {
                         recenterOnUser()
