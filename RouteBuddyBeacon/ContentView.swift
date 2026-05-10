@@ -96,6 +96,7 @@ struct ContentView: View {
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
+                            .offset(y: 6)
                         
                         if let fix = locationManager.currentFix {
                             VStack(spacing: 8) {
@@ -109,25 +110,6 @@ struct ContentView: View {
                                         .font(.system(size: 50, weight: .heavy, design: .monospaced))
                                         .padding(.vertical, 6)
                                         .padding(.bottom, 12)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
-                                            UIPasteboard.general.string = code
-                                            
-                                            let generator = UIImpactFeedbackGenerator(style: .light)
-                                            generator.prepare()
-                                            generator.impactOccurred()
-                                            
-                                            withAnimation {
-                                                showCopiedToast = true
-                                            }
-                                            
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                                                withAnimation {
-                                                    showCopiedToast = false
-                                                }
-                                            }
-                                        }
                                     
                                     Button("Send Location") {
                                         sendLocation()
@@ -135,8 +117,8 @@ struct ContentView: View {
                                     .buttonStyle(.borderedProminent)
                                     .padding(.bottom, 12)
                                     
-                                    HStack(spacing: 12) {
-                                        Button("Copy Cell") {
+                                    HStack(spacing: 22) {
+                                        Button("Copy") {
                                             let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
                                             UIPasteboard.general.string = code
                                             
@@ -157,13 +139,13 @@ struct ContentView: View {
                                         .buttonStyle(.borderedProminent)
                                         .font(.footnote)
                                         
-                                        Button("Spell Code") {
+                                        Button("Spell") {
                                             showPhoneticCode = true
                                         }
                                         .buttonStyle(.bordered)
                                         .font(.footnote)
                                         
-                                        Button("Speak Code") {
+                                        Button("Speak") {
                                             let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
                                             let spoken = phoneticCode(code)
                                                 .replacingOccurrences(of: " ", with: ", ")
@@ -213,11 +195,12 @@ struct ContentView: View {
                                 }
                                 
                                 VStack(spacing: 12) {
-                                    Text("Find a Person")
+                                    Text("Find Location")
                                         .font(.headline)
                                         .frame(maxWidth: .infinity, alignment: .center)
                                     
-                                    TextField("Paste location or code", text: $manualInput)
+                                    TextField("Paste QuodWords Code", text: $manualInput)
+                                        .multilineTextAlignment(.center)
                                         .textFieldStyle(.roundedBorder)
                                         .autocorrectionDisabled()
                                         .textInputAutocapitalization(.never)
@@ -229,7 +212,7 @@ struct ContentView: View {
                                     Button("Find") {
                                         resolveManualInput()
                                     }
-                                    .buttonStyle(.borderedProminent)
+                                    .buttonStyle(.bordered)
                                 }
                                 
                                 Divider()
