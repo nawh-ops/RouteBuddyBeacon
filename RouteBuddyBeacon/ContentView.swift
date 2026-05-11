@@ -59,6 +59,14 @@ struct ContentView: View {
                         )
                         .allowsHitTesting(false)
                     }
+
+                    if let pastedCoordinate {
+                        CurrentCellHighlightOverlay(
+                            region: currentGridRegion,
+                            coordinate: pastedCoordinate
+                        )
+                        .allowsHitTesting(false)
+                    }
                     
                     Button {
                         recenterOnUser()
@@ -605,7 +613,7 @@ struct ContentView: View {
             return
         }
 
-        guard let coordinate = QuodWordsResolver.resolve(raw) else {
+        guard let coordinate = QuodWordsResolver.resolve(raw, near: locationManager.currentFix?.coordinate) else {
             pasteStatusMessage = "Invalid location"
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 pasteStatusMessage = nil
@@ -654,7 +662,7 @@ struct ContentView: View {
             .filter { !$0.isEmpty }
 
         for candidate in candidates {
-            if let coordinate = QuodWordsResolver.resolve(candidate) {
+            if let coordinate = QuodWordsResolver.resolve(candidate, near: locationManager.currentFix?.coordinate) {
                 pastedCoordinate = coordinate
                 autoFollow = false
 

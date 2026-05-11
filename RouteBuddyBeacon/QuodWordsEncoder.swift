@@ -94,6 +94,57 @@ struct QuodWordsEncoder {
         return decodeAreaCode(zoneNumber: zoneNumber, areaBlock: areaBlock)
     }
 
+    static func decodeShortCode(_ areaBlock: String, near referenceCoordinate: CLLocationCoordinate2D) -> CLLocationCoordinate2D? {
+        let cleaned = areaBlock
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+            .replacingOccurrences(of: " ", with: "")
+
+        guard indexFromBlock(cleaned) != nil else {
+            return nil
+        }
+
+        let referenceZoneNumber = encodeCoordinate(referenceCoordinate).zoneNumber
+        let referenceZoneRow = referenceZoneNumber / zoneColumnCount
+        let referenceZoneCol = referenceZoneNumber % zoneColumnCount
+
+        var bestCoordinate: CLLocationCoordinate2D?
+        var bestDistanceSquared = Double.greatestFiniteMagnitude
+
+        for rowOffset in -1...1 {
+            for colOffset in -1...1 {
+                let candidateZoneRow = referenceZoneRow + rowOffset
+                let candidateZoneCol = referenceZoneCol + colOffset
+
+                guard candidateZoneRow >= 0,
+                      candidateZoneCol >= 0,
+                      candidateZoneCol < zoneColumnCount else {
+                    continue
+                }
+
+                let candidateZoneNumber = candidateZoneRow * zoneColumnCount + candidateZoneCol
+
+                guard let candidateCoordinate = decodeAreaCode(
+                    zoneNumber: candidateZoneNumber,
+                    areaBlock: cleaned
+                ) else {
+                    continue
+                }
+
+                let dLat = candidateCoordinate.latitude - referenceCoordinate.latitude
+                let dLon = candidateCoordinate.longitude - referenceCoordinate.longitude
+                let distanceSquared = dLat * dLat + dLon * dLon
+
+                if distanceSquared < bestDistanceSquared {
+                    bestDistanceSquared = distanceSquared
+                    bestCoordinate = candidateCoordinate
+                }
+            }
+        }
+
+        return bestCoordinate
+    }
+
     // MARK: - Core encoding
 
     private static func encodeCoordinate(_ coordinate: CLLocationCoordinate2D) -> EncodedQuodWordsArea {

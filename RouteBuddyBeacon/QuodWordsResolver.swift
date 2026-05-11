@@ -3,20 +3,21 @@ import CoreLocation
 
 struct QuodWordsResolver {
 
-    static func resolve(_ input: String) -> CLLocationCoordinate2D? {
+    static func resolve(_ input: String, near referenceCoordinate: CLLocationCoordinate2D? = nil) -> CLLocationCoordinate2D? {
         let cleaned = clean(input)
 
-        // 1. Try TAQ56 short code
-        if let coord = parseTAQ56(cleaned) {
-            return coord
-        }
-
-        // 2. Try full QuodWords format
+        // 1. Try full QuodWords format, e.g. QW-GB-123-WXW37 or GB-123-WXW37.
         if let coord = QuodWordsEncoder.decode(cleaned) {
             return coord
         }
 
-        // 3. Try lat/lon formats
+        // 2. Try bare local short code, e.g. WXW37, using current/live location as context.
+        if let referenceCoordinate,
+           let coord = QuodWordsEncoder.decodeShortCode(cleaned, near: referenceCoordinate) {
+            return coord
+        }
+
+        // 3. Try lat/lon formats.
         if let coord = parseLatLon(cleaned) {
             return coord
         }
