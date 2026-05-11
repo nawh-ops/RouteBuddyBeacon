@@ -151,7 +151,8 @@ struct ContentView: View {
                                             showPhoneticCode = true
                                         }
                                         .buttonStyle(.bordered)
-                                        .font(.footnote)
+                                        .tint(.blue)
+                                        .font(.footnote.weight(.semibold))
                                         
                                         Button("Speak") {
                                             let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
@@ -161,7 +162,8 @@ struct ContentView: View {
                                             speak(spoken)
                                         }
                                         .buttonStyle(.bordered)
-                                        .font(.footnote)
+                                        .tint(.blue)
+                                        .font(.footnote.weight(.semibold))
                                     }
                                     .padding(.bottom, 12)
                                     .padding(.top, 4)
@@ -408,7 +410,9 @@ struct ContentView: View {
         } message: {
             if let fix = locationManager.currentFix {
                 let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
-                Text("\(code)\n\n\(phoneticCode(code))")
+                Text("SHORT:\n\(code)\n\nSPELL:\n\(phoneticCode(code))")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
             }
         }
     }
@@ -733,12 +737,17 @@ struct ContentView: View {
     private func sendLocation() {
         guard let fix = locationManager.currentFix else { return }
         
-        let code = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
+        let shortCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
+        let fullCode = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
         
         let message = """
-        My QuodWords Code:
+        My QuodWords location:
         
-        \(code)
+        SHORT code: 
+        \(shortCode)
+        
+        LONG code: 
+        \(fullCode)
         """
         
         let encodedMessage =
@@ -760,8 +769,9 @@ struct ContentView: View {
         }
         
         let introMessage = "I'm here"
-        let codeMessage = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
-        let message = "\(introMessage)\n\n\(codeMessage)"
+        let shortCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
+        let fullCode = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
+        let message = "\(introMessage)\n\nSHORT: \(shortCode)\n\nLONG: \(fullCode)"
         
         let encodedMessage =
         message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
@@ -808,11 +818,18 @@ struct ContentView: View {
         
         let mapsURL = "http://maps.apple.com/?daddr=\(lat),\(lon)"
         
+        let shortCode = QuodWordsEncoder.shortCode(from: coordinate)
+        let fullCode = QuodWordsEncoder.fullAreaCode(from: coordinate)
+
         let message = """
-        Navigate to me:
+        NAVIGATE to ME:
         \(mapsURL)
-        
-        Your QuodWords Code: \(QuodWordsEncoder.fullAreaCode(from: coordinate))
+
+        SHORT:
+        \(shortCode)
+
+        LONG:
+        \(fullCode)
         """
         
         var allowed = CharacterSet.urlQueryAllowed
