@@ -44,7 +44,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     func startUpdatingLocation() {
-        guard CLLocationManager .locationServicesEnabled() else {
+        guard CLLocationManager.locationServicesEnabled() else {
             errorMessage = "Location Services are disabled on this device."
             return
         }

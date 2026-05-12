@@ -400,6 +400,9 @@ struct ContentView: View {
                 .transition(.opacity)
             }
         }
+        .onAppear {
+            locationManager.startUpdatingLocation()
+        }
         .sheet(isPresented: $locationManager.shouldShowShareSheet, onDismiss: {
             locationManager.exportURLs.removeAll()
         }) {
