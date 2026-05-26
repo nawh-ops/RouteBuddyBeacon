@@ -44,21 +44,17 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     }
 
     func startUpdatingLocation() {
-        guard CLLocationManager.locationServicesEnabled() else {
-            errorMessage = "Location Services are disabled on this device."
-            return
-        }
-
         switch manager.authorizationStatus {
         case .notDetermined:
             requestLocationPermission()
 
-        case .restricted, .denied:
-            errorMessage = "Location access is denied. Please enable it in Settings."
-
         case .authorizedWhenInUse, .authorizedAlways:
             errorMessage = nil
             manager.startUpdatingLocation()
+            manager.startUpdatingHeading()
+
+        case .restricted, .denied:
+            errorMessage = "Location access is denied. Please enable it in Settings."
 
         @unknown default:
             errorMessage = "Unknown location authorization state."
@@ -78,6 +74,7 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
           case .authorizedWhenInUse, .authorizedAlways:
               errorMessage = nil
               manager.startUpdatingLocation()
+              manager.startUpdatingHeading()
 
           case .denied:
               errorMessage = "Location access denied."

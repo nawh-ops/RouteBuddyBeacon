@@ -119,7 +119,7 @@ struct ContentView: View {
                                         .padding(.vertical, 6)
                                         .padding(.bottom, 12)
                                     
-                                    Button("Send Location") {
+                                    Button("Send My Location") {
                                         sendLocation()
                                     }
                                     .buttonStyle(.borderedProminent)
@@ -208,17 +208,23 @@ struct ContentView: View {
                                     Text("Find Location")
                                         .font(.headline)
                                         .frame(maxWidth: .infinity, alignment: .center)
-                                    
-                                    TextField("Paste QuodWords Code", text: $manualInput)
-                                        .multilineTextAlignment(.center)
-                                        .textFieldStyle(.roundedBorder)
-                                        .autocorrectionDisabled()
-                                        .textInputAutocapitalization(.characters)
-                                        .focused($manualInputFocused)
-                                        .submitLabel(.search)
-                                        .onSubmit {
-                                            resolveManualInput()
-                                        }
+
+                                    TextField(
+                                        "",
+                                        text: $manualInput,
+                                        prompt: Text("Paste QuodWords Code")
+                                            .foregroundStyle(.blue)
+                                    )
+                                    .multilineTextAlignment(.center)
+                                    .textFieldStyle(.roundedBorder)
+                                    .foregroundStyle(.blue)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.characters)
+                                    .focused($manualInputFocused)
+                                    .submitLabel(.search)
+                                    .onSubmit {
+                                        resolveManualInput()
+                                    }
                                 }
                                 
                                 Divider()
@@ -229,7 +235,7 @@ struct ContentView: View {
                                         .font(.headline)
                                         .frame(maxWidth: .infinity, alignment: .center)
                                     
-                                    Button("Navigate To Me") {
+                                    Button("Share Map Link") {
                                         sendNavigateToMeSMS(using: fix)
                                     }
                                     .buttonStyle(.bordered)
