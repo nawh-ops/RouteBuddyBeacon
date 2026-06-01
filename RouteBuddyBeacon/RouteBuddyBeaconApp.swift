@@ -20,7 +20,6 @@ struct RouteBuddyBeaconApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {
-        QuodWords.debugSelfTest()
     }
 
     var body: some Scene {
