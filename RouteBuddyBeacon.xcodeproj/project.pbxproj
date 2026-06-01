@@ -256,7 +256,7 @@
 				DEVELOPMENT_TEAM = MHB9NV48YW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Beacon;
+				INFOPLIST_KEY_CFBundleDisplayName = BEACON;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "RouteBuddy Beacon uses your location to show your live position and generate your QuodWords location code.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -291,7 +291,7 @@
 				DEVELOPMENT_TEAM = MHB9NV48YW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Beacon;
+				INFOPLIST_KEY_CFBundleDisplayName = BEACON;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "RouteBuddy Beacon uses your location to show your live position and generate your QuodWords location code.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
