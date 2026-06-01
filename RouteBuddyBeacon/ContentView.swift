@@ -114,10 +114,14 @@ struct ContentView: View {
                                         .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity, alignment: .center)
                                     
-                                    Text(QuodWordsEncoder.shortCode(from: fix.coordinate))
-                                        .font(.system(size: 50, weight: .heavy, design: .monospaced))
-                                        .padding(.vertical, 6)
-                                        .padding(.bottom, 12)
+                                    displayQuodWordsCodeView(
+                                        QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                    )
+                                    .font(.system(size: 50, weight: .heavy, design: .monospaced))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                                    .padding(.vertical, 6)
+                                    .padding(.bottom, 12)
                                     
                                     Button("Send My Location") {
                                         sendLocation()
@@ -208,7 +212,7 @@ struct ContentView: View {
                                     Text("Find Location")
                                         .font(.headline)
                                         .frame(maxWidth: .infinity, alignment: .center)
-
+                                    
                                     TextField(
                                         "",
                                         text: $manualInput,
@@ -829,10 +833,13 @@ struct ContentView: View {
         
         let shortCode = QuodWordsEncoder.shortCode(from: coordinate)
         let fullCode = QuodWordsEncoder.fullAreaCode(from: coordinate)
-
+        
         let message = """
-        NAVIGATE to ME:
+        NAVIGATE TO ME:
         \(mapsURL)
+
+
+        QUODWORDS CODE:
 
         SHORT:
         \(shortCode)
@@ -865,6 +872,35 @@ struct ContentView: View {
             return "Recording"
         case .paused:
             return "Paused"
+        }
+    }
+    
+    private func quodWordsDisplayParts(_ code: String) -> (letters: String, digits: String, finalLetter: String)? {
+        let cleaned = code.replacingOccurrences(of: " ", with: "")
+        
+        guard cleaned.count == 7 else {
+            return nil
+        }
+        
+        let chars = Array(cleaned)
+        
+        return (
+            letters: String(chars[0...2]),
+            digits: String(chars[3...5]),
+            finalLetter: String(chars[6])
+        )
+    }
+    
+    @ViewBuilder
+    private func displayQuodWordsCodeView(_ code: String) -> some View {
+        if let parts = quodWordsDisplayParts(code) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(parts.letters)
+                Text(parts.digits)
+                Text(parts.finalLetter)
+            }
+        } else {
+            Text(code)
         }
     }
 }
