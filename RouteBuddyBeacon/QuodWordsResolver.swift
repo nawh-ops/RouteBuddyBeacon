@@ -6,18 +6,28 @@ struct QuodWordsResolver {
     static func resolve(_ input: String, near referenceCoordinate: CLLocationCoordinate2D? = nil) -> CLLocationCoordinate2D? {
         let cleaned = clean(input)
 
-        // 1. Try full QuodWords format, e.g. QW-GB-123-WXW37 or GB-123-WXW37.
+        // 1. Try new QuodWords v1 format, e.g.
+        //    GB-IIN614R or IIN614R.
+        if let coord = try? QuodWords.decodeCoordinate(from: cleaned, defaultTerritory: .gb) {
+            return coord
+        }
+
+        // 2. Temporary fallback: try old QuodWords format, e.g.
+        //    QW-GB-123-WXW37 or GB-123-WXW37.
         if let coord = QuodWordsEncoder.decode(cleaned) {
             return coord
         }
 
-        // 2. Try bare local short code, e.g. WXW37, using current/live location as context.
+        // 3. Temporary fallback: try old bare local short code, e.g. WXW37,
+        //    using current/live location as context.
         if let referenceCoordinate,
-           let coord = QuodWordsEncoder.decodeShortCode(cleaned, near: referenceCoordinate) {
+           let coord =
+            QuodWordsEncoder.decodeShortCode(cleaned,
+                                             near: referenceCoordinate) {
             return coord
         }
 
-        // 3. Try lat/lon formats.
+        // 4. Try lat/lon formats.
         if let coord = parseLatLon(cleaned) {
             return coord
         }

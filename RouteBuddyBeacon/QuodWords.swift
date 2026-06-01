@@ -263,6 +263,12 @@ enum QuodWords {
 
         return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
+    
+    static func decodeCoordinate(from input: String, defaultTerritory: QuodWordsTerritory? = .gb) throws -> CLLocationCoordinate2D {
+        let parsedCode = try parse(input, defaultTerritory: defaultTerritory)
+        return try decodeGBCode(parsedCode)
+    }
+    
     static func debugSelfTest() {
         do {
             let testIndices = [
@@ -305,6 +311,12 @@ enum QuodWords {
             print("Cell index:", encodedCell.index)
             print("Cell x/y:", encodedCell.xIndex, encodedCell.yIndex)
             print("Decoded centre:", decodedCentre.latitude, decodedCentre.longitude)
+            
+            let decodedFromFormal = try decodeCoordinate(from: encodedCell.code.formalCode)
+            let decodedFromShort = try decodeCoordinate(from: encodedCell.code.nationalCellCode)
+
+            print("Decoded from formal:", decodedFromFormal.latitude, decodedFromFormal.longitude)
+            print("Decoded from short:", decodedFromShort.latitude, decodedFromShort.longitude)
             
             print("----- QuodWords self-test passed -----")
         } catch {
