@@ -35,7 +35,11 @@ struct QuodWordsEncoder {
     // MARK: - Public encoding API
 
     static func encode(_ fix: BeaconFix) -> String {
-        fullAreaCode(from: fix.coordinate)
+        do {
+            return try QuodWords.encodeFormalCode(for: fix.coordinate)
+        } catch {
+            return "GB-INVALID"
+        }
     }
 
     static func shortCode(from coordinate: CLLocationCoordinate2D) -> String {
