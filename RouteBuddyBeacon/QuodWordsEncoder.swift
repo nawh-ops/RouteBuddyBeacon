@@ -43,13 +43,21 @@ struct QuodWordsEncoder {
     }
 
     static func shortCode(from coordinate: CLLocationCoordinate2D) -> String {
-        let encoded = encodeCoordinate(coordinate)
-        return encoded.areaBlock
+        do {
+            let cell = try QuodWords.encodeGBCoordinate(coordinate)
+            return cell.code.nationalCellCode
+        } catch {
+            return "INVALID"
+        }
     }
 
-    static func fullAreaCode(from coordinate: CLLocationCoordinate2D) -> String {
-        let encoded = encodeCoordinate(coordinate)
-        return "QW-\(countryCode)-\(encoded.zoneString)-\(encoded.areaBlock)"
+    static func fullAreaCode(from coordinate:
+        CLLocationCoordinate2D) -> String {
+        do {
+            return try QuodWords.encodeFormalCode(for: coordinate)
+        } catch {
+            return "GB-INVALID"
+        }
     }
 
     static func zoneCode(from coordinate: CLLocationCoordinate2D) -> String {
