@@ -37,8 +37,9 @@ struct QuodWordsCode: Equatable {
 enum QuodWords {
     static let cellSizeMetres: Double = 32.0
 
-    // LLLDDDL = 26 × 26 × 26 × 10 × 10 × 10 × 26
-    static let nationalCellCapacity: Int = 456_976_000
+    // LLLDDDL = 26 × 26 × 26 × 10 × 10 × 10 × 25
+    // Final suffix letter excludes O.
+    static let nationalCellCapacity: Int = 439_400_000
     
     // Temporary GB v1 internal grid bounds.
     // These are deliberately generous WGS84 bounds for UK testing.
@@ -74,7 +75,7 @@ enum QuodWords {
             && isDigit(chars[3])
             && isDigit(chars[4])
             && isDigit(chars[5])
-            && isLetter(chars[6])
+            && suffixLetterValue(chars[6]) != nil
     }
 
     static func parse(_ input: String, defaultTerritory: QuodWordsTerritory? = nil) throws -> QuodWordsCode {
@@ -124,8 +125,8 @@ enum QuodWords {
 
         var remaining = index
 
-        let finalLetterIndex = remaining % 26
-        remaining /= 26
+        let finalLetterIndex = remaining % suffixLetters.count
+        remaining /= suffixLetters.count
 
         let d3 = remaining % 10
         remaining /= 10
@@ -144,7 +145,8 @@ enum QuodWords {
 
         let l1 = remaining % 26
 
-        return "\(letterAlphabet[l1])\(letterAlphabet[l2])\(letterAlphabet[l3])\(d1)\(d2)\(d3)\(letterAlphabet[finalLetterIndex])"
+        return
+            "\(letterAlphabet[l1])\(letterAlphabet[l2])\(letterAlphabet[l3])\(d1)\(d2)\(d3)\(suffixLetter(finalLetterIndex))"
     }
 
     static func index(fromNationalCellCode code: String) throws -> Int {
@@ -163,7 +165,7 @@ enum QuodWords {
             let d1 = digitAlphabet.firstIndex(of: chars[3]),
             let d2 = digitAlphabet.firstIndex(of: chars[4]),
             let d3 = digitAlphabet.firstIndex(of: chars[5]),
-            let finalLetter = letterAlphabet.firstIndex(of: chars[6])
+            let finalLetter = suffixLetterValue(chars[6])
         else {
             throw QuodWordsError.invalidFormat
         }
@@ -174,7 +176,7 @@ enum QuodWords {
         index = index * 10 + d1
         index = index * 10 + d2
         index = index * 10 + d3
-        index = index * 26 + finalLetter
+        index = index * suffixLetters.count + finalLetter
 
         guard index >= 0 && index < nationalCellCapacity else {
             throw QuodWordsError.invalidCode
@@ -191,6 +193,15 @@ enum QuodWords {
         character >= "0" && character <= "9"
     }
     
+    private static let suffixLetters = Array("ABCDEFGHIJKLMNPQRSTUVWXYZ") // A-Z, no O
+
+    private static func suffixLetter(_ value: Int) -> Character {
+        suffixLetters[value]
+    }
+
+    private static func suffixLetterValue(_ character: Character) -> Int? {
+        suffixLetters.firstIndex(of: character)
+    }
     static func encodeFormalCode(for coordinate: CLLocationCoordinate2D) throws -> String {
         let cell = try encodeGBCoordinate(coordinate)
         return cell.code.formalCode
