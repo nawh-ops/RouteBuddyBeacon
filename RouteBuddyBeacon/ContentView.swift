@@ -229,6 +229,32 @@ struct ContentView: View {
                                     .onSubmit {
                                         resolveManualInput()
                                     }
+                                    .frame(maxWidth: .infinity, alignment: .center)
+
+                                    HStack(spacing: 16) {
+                                        Button("Paste") {
+                                            pasteQuodWordsFromClipboard()
+                                        }
+                                        .buttonStyle(.borderedProminent)
+
+                                        Button("Find") {
+                                            resolveManualInput()
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                    .font(.footnote.weight(.semibold))
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                }
+                                if let pasteStatusMessage {
+                                    Text(pasteStatusMessage)
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(
+                                            pasteStatusMessage.lowercased().contains("invalid") ? .red : .secondary
+                                        )
+                                        .multilineTextAlignment(.center)
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                        .padding(.top, 8)
                                 }
                                 
                                 Divider()
@@ -270,14 +296,6 @@ struct ContentView: View {
                                     }
                                     .buttonStyle(.bordered)
                                     .font(.footnote.weight(.semibold))
-                                    
-                                    if let pasteStatusMessage {
-                                        Text(pasteStatusMessage)
-                                            .font(.headline)
-                                            .foregroundColor(
-                                                pasteStatusMessage == "Location loaded" ? .green : .red
-                                            )
-                                    }
                                     
                                     if let speedKPH = fix.speedKPH {
                                         Text("Speed: \(speedKPH, specifier: "%.1f") km/h")
@@ -618,67 +636,60 @@ struct ContentView: View {
     }
     
     private func pasteQuodWordsFromClipboard() {
-        guard let raw = UIPasteboard.general.string, !raw.isEmpty else {
-            pasteStatusMessage = "Clipboard is empty"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                pasteStatusMessage = nil
+        manualInputFocused = false
+
+        let pasted = UIPasteboard.general.string?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        guard !pasted.isEmpty else {
+            pasteStatusMessage = "Clipboard empty"
+
+            let message = pasteStatusMessage
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.seconds(3)) {
+                if pasteStatusMessage == message {
+                    pasteStatusMessage = nil
+                }
             }
             return
         }
-        
-        guard let coordinate = QuodWordsResolver.resolve(raw, near: locationManager.currentFix?.coordinate) else {
-            pasteStatusMessage = "Invalid location"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                pasteStatusMessage = nil
-            }
-            return
-        }
-        
-        pastedCoordinate = coordinate
-        autoFollow = false
-        
-        cameraPosition = .region(
-            MKCoordinateRegion(
-                center: coordinate,
-                span: MKCoordinateSpan(
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01
-                )
-            )
-        )
-        
-        pasteStatusMessage = "Location loaded"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            pasteStatusMessage = nil
-        }
+
+        manualInput = pasted
+        resolveManualInput(pasted)
     }
     
-    private func resolveManualInput() {
+    private func resolveManualInput(_ input: String? = nil) {
         manualInputFocused = false
-        
-        let trimmed = manualInput.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
+        let trimmed = (input ?? manualInput)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
         guard !trimmed.isEmpty else {
             pasteStatusMessage = "Enter a location"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                pasteStatusMessage = nil
+            let message = pasteStatusMessage
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.seconds(3)) {
+                if pasteStatusMessage == message {
+                    pasteStatusMessage = nil
+                }
             }
             return
         }
-        
+
         let separators = CharacterSet.whitespacesAndNewlines
             .union(.punctuationCharacters)
-        
+
         let candidates = trimmed
             .components(separatedBy: separators)
             .map { $0.uppercased() }
             .filter { !$0.isEmpty }
-        
+
         for candidate in candidates {
-            if let coordinate = QuodWordsResolver.resolve(candidate, near: locationManager.currentFix?.coordinate) {
+            if let coordinate = QuodWordsResolver.resolve(
+                candidate,
+                near: locationManager.currentFix?.coordinate
+            ) {
                 pastedCoordinate = coordinate
                 autoFollow = false
-                
+
                 cameraPosition = .region(
                     MKCoordinateRegion(
                         center: coordinate,
@@ -688,21 +699,29 @@ struct ContentView: View {
                         )
                     )
                 )
-                
-                manualInput = ""
-                pasteStatusMessage = "Location loaded"
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    pasteStatusMessage = nil
+
+                manualInput = candidate
+                pasteStatusMessage = "Location found"
+
+                let message = pasteStatusMessage
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.seconds(3)) {
+                    if pasteStatusMessage == message {
+                        pasteStatusMessage = nil
+                    }
                 }
-                
+
                 return
             }
         }
-        
-        pasteStatusMessage = "Invalid location"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            pasteStatusMessage = nil
+
+        manualInput = trimmed.uppercased()
+        pasteStatusMessage = "Invalid QuodWords code"
+
+        let message = pasteStatusMessage
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + DispatchTimeInterval.seconds(6)) {
+            if pasteStatusMessage == message {
+                pasteStatusMessage = nil
+            }
         }
     }
     
