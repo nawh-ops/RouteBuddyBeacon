@@ -208,7 +208,7 @@ struct ContentView: View {
                                         .padding(.bottom, 12)
                                 }
                                 
-                                VStack(spacing: 12) {
+                                VStack(alignment: .center, spacing: 12) {
                                     Text("Find Location")
                                         .font(.headline)
                                         .frame(maxWidth: .infinity, alignment: .center)
