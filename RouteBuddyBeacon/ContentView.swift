@@ -493,6 +493,15 @@ struct ContentView: View {
                             .font(.body)
                         
                         guideSection(
+                            title: "Share / Get RouteBuddy Beacon",
+                            body: """
+                            When RouteBuddy Beacon is available on the App Store, this section will show a QR code or link that another person can use to download the app.
+                            
+                            This is intended for quick sharing at a trail start, event, or when helping someone else install Beacon.
+                            """
+                        )
+                        
+                        guideSection(
                             title: "Main controls",
                             body: """
                             Copy — copies your current location code.
