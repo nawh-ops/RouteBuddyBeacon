@@ -486,14 +486,19 @@ struct ContentView: View {
                         Text("Beacon shows your current location and creates a QuodWords location code that can be copied, spelled, spoken, or shared with someone else.")
                             .font(.body)
                         
-                        Text("Beacon is not a navigation app. It is a location and communication tool.")
-                            .font(.body.weight(.semibold))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("BEACON IS NOT A NAVIGATION APP")
+                                .font(.headline.bold())
+                            
+                            Text("It is a location and communication tool.")
+                                .font(.body)
+                        }
                         
                         Text("It is designed to show your current position, create a QuodWords location code, and help you share that location clearly when you are under pressure or data coverage is poor.")
                             .font(.body)
                         
                         guideSection(
-                            title: "Share / Get RouteBuddy Beacon",
+                            title: "SHARE / GET RouteBuddy Beacon",
                             body: """
                             When RouteBuddy Beacon is available on the App Store, this section will show a QR code or link that another person can use to download the app.
                             
@@ -502,22 +507,22 @@ struct ContentView: View {
                         )
                         
                         guideSection(
-                            title: "Main controls",
+                            title: "MAIN CONTROLS",
                             body: """
-                            Copy — copies your current location code.
+                            **Copy** — copies your current location code.
                             
-                            Spell — shows the code in phonetic form so it can be read clearly.
+                            **Spell** — shows the code in phonetic form so it can be read clearly.
                             
-                            Speak — speaks the code aloud.
+                            **Speak** — speaks the code aloud.
                             
-                            Send My Location — prepares a message containing your location details. You choose who to send it to.
+                            **Send My Location** — prepares a message containing your location details. You choose who to send it to.
                             
-                            Find Location — paste or enter a QuodWords code to move the map to that location.
+                            **Find Location** — paste or enter a QuodWords code to move the map to that location.
                             """
                         )
                         
                         guideSection(
-                            title: "Map and location",
+                            title: "MAP AND LOCATION",
                             body: """
                             Beacon needs location permission to show your live position.
                             
@@ -528,7 +533,7 @@ struct ContentView: View {
                         )
                         
                         guideSection(
-                            title: "Recording and exports",
+                            title: "RECORDING AND EXPORTS",
                             body: """
                             Recording controls are currently hidden in this beta build.
                             
@@ -539,7 +544,7 @@ struct ContentView: View {
                         )
                         
                         guideSection(
-                            title: "Important beta note",
+                            title: "IMPORTANT BETA NOTE",
                             body: """
                             RouteBuddy Beacon is a beta app.
                             
@@ -566,9 +571,9 @@ struct ContentView: View {
         private func guideSection(title: String, body: String) -> some View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(title)
-                    .font(.headline)
+                    .font(.headline.bold())
                 
-                Text(body)
+                Text(.init(body))
                     .font(.body)
                     .foregroundStyle(.primary)
             }
