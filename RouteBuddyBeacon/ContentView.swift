@@ -25,6 +25,7 @@ struct ContentView: View {
     @State private var isPulsing = false
     @State private var showAdvanced = false
     @State private var showRecordingUI = false
+    @State private var showAboutMiniGuide = false
     
     @State private var currentGridRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 52.5, longitude: -1.5),
@@ -412,6 +413,27 @@ struct ContentView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             
+            VStack {
+                HStack {
+                    Spacer()
+                    
+                    Button {
+                        showAboutMiniGuide = true
+                    } label: {
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(Color.black.opacity(0.65), in: Circle())
+                    }
+                    .accessibilityLabel("About RouteBuddy Beacon")
+                    .padding(.top, 12)
+                    .padding(.trailing, 12)
+                }
+                
+                Spacer()
+            }
+            
             if showCopiedToast {
                 VStack {
                     Spacer()
@@ -431,6 +453,9 @@ struct ContentView: View {
         .onAppear {
             locationManager.startUpdatingLocation()
         }
+        .sheet(isPresented: $showAboutMiniGuide) {
+            AboutMiniGuideView()
+        }
         .sheet(isPresented: $locationManager.shouldShowShareSheet, onDismiss: {
             locationManager.exportURLs.removeAll()
         }) {
@@ -443,6 +468,99 @@ struct ContentView: View {
                 let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
                 Text("SHORT:\n\(code)\n\nSPELL:\n\(phoneticCode(code))")
                     .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
+        }
+    }
+    
+    private struct AboutMiniGuideView: View {
+        @Environment(\.dismiss) private var dismiss
+        
+        var body: some View {
+            NavigationStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        Text("RouteBuddy Beacon")
+                            .font(.largeTitle.bold())
+                        
+                        Text("Beacon shows your current location and creates a QuodWords location code that can be copied, spelled, spoken, or shared with someone else.")
+                            .font(.body)
+                        
+                        Text("Beacon is not a navigation app. It is a location and communication tool.")
+                            .font(.body.weight(.semibold))
+                        
+                        Text("It is designed to show your current position, create a QuodWords location code, and help you share that location clearly when you are under pressure or data coverage is poor.")
+                            .font(.body)
+                        
+                        guideSection(
+                            title: "Main controls",
+                            body: """
+                            Copy — copies your current location code.
+                            
+                            Spell — shows the code in phonetic form so it can be read clearly.
+                            
+                            Speak — speaks the code aloud.
+                            
+                            Send My Location — prepares a message containing your location details. You choose who to send it to.
+                            
+                            Find Location — paste or enter a QuodWords code to move the map to that location.
+                            """
+                        )
+                        
+                        guideSection(
+                            title: "Map and location",
+                            body: """
+                            Beacon needs location permission to show your live position.
+                            
+                            Your phone can determine your GPS location without loading map tiles, but the visible map background may need a data connection.
+                            
+                            If the map background does not load, your GPS position and QuodWords code may still be correct.
+                            """
+                        )
+                        
+                        guideSection(
+                            title: "Recording and exports",
+                            body: """
+                            Recording controls are currently hidden in this beta build.
+                            
+                            When enabled, recording can capture your route for later export.
+                            
+                            GPX and CSV exports are available when recording data exists.
+                            """
+                        )
+                        
+                        guideSection(
+                            title: "Important beta note",
+                            body: """
+                            RouteBuddy Beacon is a beta app.
+                            
+                            Do not rely on it as your only navigation or emergency safety tool.
+                            
+                            Always use normal navigation judgement, suitable maps, and established emergency procedures.
+                            """
+                        )
+                    }
+                    .padding()
+                }
+                .navigationTitle("Mini Guide")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
+            }
+        }
+        
+        private func guideSection(title: String, body: String) -> some View {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                
+                Text(body)
+                    .font(.body)
                     .foregroundStyle(.primary)
             }
         }
