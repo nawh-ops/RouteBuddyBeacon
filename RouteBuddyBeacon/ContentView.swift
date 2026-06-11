@@ -5,8 +5,15 @@ import UIKit
 import AVFoundation
 
 struct ContentView: View {
-    @State private var pasteStatusMessage: String? = nil
-    @State private var emergencyPhoneNumber: String = "07974919020"
+    @State private var pasteStatusMessage: String? =
+        nil
+
+    @State private var displayedQuodWordsCode: String = ""
+    @State private var candidateQuodWordsCode: String?
+    @State private var candidateQuodWordsSince: Date?
+
+    @State private var emergencyPhoneNumber: String =
+        "07974919020"
     @StateObject private var locationManager = LocationManager()
     @State private var showDebug = false
     @State private var cameraPosition: MapCameraPosition = .region(
@@ -116,13 +123,30 @@ struct ContentView: View {
                                         .frame(maxWidth: .infinity, alignment: .center)
                                     
                                     displayQuodWordsCodeView(
-                                        QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                        displayedQuodWordsCode.isEmpty
+                                            ? QuodWordsEncoder
+                                                .shortCode(from: fix.coordinate)
+                                            : displayedQuodWordsCode
                                     )
-                                    .font(.system(size: 50, weight: .heavy, design: .monospaced))
+                                    .font(
+                                        .system(size: 50,
+                                                weight: .heavy,
+                                                design: .monospaced)
+                                    )
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.85)
                                     .padding(.vertical, 6)
                                     .padding(.bottom, 12)
+                                    .onChange(of: locationManager.currentFix?.coordinate.latitude) {
+                                        guard let fix = locationManager.currentFix else { return }
+                                        let newCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                        updateStableQuodWordsCode(with: newCode)
+                                    }
+                                    .onChange(of: locationManager.currentFix?.coordinate.longitude) {
+                                        guard let fix = locationManager.currentFix else { return }
+                                        let newCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                        updateStableQuodWordsCode(with: newCode)
+                                    }
                                     
                                     Button("Send My Location") {
                                         sendLocation()
@@ -132,7 +156,9 @@ struct ContentView: View {
                                     
                                     HStack(spacing: 22) {
                                         Button("Copy") {
-                                            let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                            let code = displayedQuodWordsCode.isEmpty
+                                                ? QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                                : displayedQuodWordsCode
                                             UIPasteboard.general.string = code
                                             
                                             let generator = UIImpactFeedbackGenerator(style: .light)
@@ -160,7 +186,9 @@ struct ContentView: View {
                                         .font(.footnote.weight(.semibold))
                                         
                                         Button("Speak") {
-                                            let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                            let code = displayedQuodWordsCode.isEmpty
+                                                ? QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                                : displayedQuodWordsCode
                                             let spoken = phoneticCode(code)
                                                 .replacingOccurrences(of: " ", with: ", ")
                                             
@@ -465,7 +493,9 @@ struct ContentView: View {
             Button("OK", role: .cancel) { }
         } message: {
             if let fix = locationManager.currentFix {
-                let code = QuodWordsEncoder.shortCode(from: fix.coordinate)
+                let code = displayedQuodWordsCode.isEmpty
+                    ? QuodWordsEncoder.shortCode(from: fix.coordinate)
+                    : displayedQuodWordsCode
                 Text("SHORT:\n\(code)\n\nSPELL:\n\(phoneticCode(code))")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.primary)
@@ -889,6 +919,34 @@ struct ContentView: View {
             .joined(separator: " ")
     }
     
+    private func updateStableQuodWordsCode(with newCode: String) {
+        if displayedQuodWordsCode.isEmpty {
+            displayedQuodWordsCode = newCode
+            candidateQuodWordsCode = nil
+            candidateQuodWordsSince = nil
+            return
+        }
+
+        if newCode == displayedQuodWordsCode {
+            candidateQuodWordsCode = nil
+            candidateQuodWordsSince = nil
+            return
+        }
+
+        if newCode != candidateQuodWordsCode {
+            candidateQuodWordsCode = newCode
+            candidateQuodWordsSince = Date()
+            return
+        }
+
+        if let since = candidateQuodWordsSince,
+           Date().timeIntervalSince(since) >= 5 {
+            displayedQuodWordsCode = newCode
+            candidateQuodWordsCode = nil
+            candidateQuodWordsSince = nil
+        }
+    }
+    
     private func speak(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice =
@@ -910,7 +968,9 @@ struct ContentView: View {
     private func sendLocation() {
         guard let fix = locationManager.currentFix else { return }
         
-        let shortCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
+        let shortCode = displayedQuodWordsCode.isEmpty
+            ? QuodWordsEncoder.shortCode(from: fix.coordinate)
+            : displayedQuodWordsCode
         let fullCode = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
         
         let message = """
