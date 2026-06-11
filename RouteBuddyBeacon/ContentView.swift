@@ -971,16 +971,30 @@ struct ContentView: View {
         let shortCode = displayedQuodWordsCode.isEmpty
             ? QuodWordsEncoder.shortCode(from: fix.coordinate)
             : displayedQuodWordsCode
-        let fullCode = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
-        
+        let fullCode =
+            QuodWordsEncoder.fullAreaCode(from:
+                fix.coordinate)
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "en_GB")
+        formatter.timeZone = .current
+
+        let generatedTime = formatter.string(from: Date())
+
         let message = """
         My QuodWords location:
         
         SHORT code: 
         \(shortCode)
         
-        LONG code: 
+        LONG code:
         \(fullCode)
+        
+
+        Generated:
+        \(generatedTime)
         """
         
         let encodedMessage =
