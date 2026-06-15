@@ -578,6 +578,10 @@ struct ContentView: View {
                             body: """
                             RouteBuddy Beacon is a beta app.
                             
+                            QuodWords codes identify approximate location cells. They do not guarantee that a location is accessible, safe, on land, or suitable for navigation.
+                            
+                            Beacon is not a marine navigation, distress, or rescue system.
+                            
                             Do not rely on it as your only navigation or emergency safety tool.
                             
                             Always use normal navigation judgement, suitable maps, and established emergency procedures.
