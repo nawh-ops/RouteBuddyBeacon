@@ -9,6 +9,7 @@ struct ContentView: View {
         nil
 
     @State private var displayedQuodWordsCode: String = ""
+    @State private var displayedQuodWordsCoordinate: CLLocationCoordinate2D?
     @State private var candidateQuodWordsCode: String?
     @State private var candidateQuodWordsSince: Date?
 
@@ -60,10 +61,13 @@ struct ContentView: View {
                         }
                     }
                     
-                    if let location = locationManager.lastLocation {
+                    if let location =
+                        locationManager.lastLocation {
                         CurrentCellHighlightOverlay(
                             region: currentGridRegion,
-                            coordinate: location.coordinate
+                            coordinate:
+                                displayedQuodWordsCoordinate
+                                    ?? location.coordinate
                         )
                         .allowsHitTesting(false)
                     }
@@ -140,12 +144,12 @@ struct ContentView: View {
                                     .onChange(of: locationManager.currentFix?.coordinate.latitude) {
                                         guard let fix = locationManager.currentFix else { return }
                                         let newCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
-                                        updateStableQuodWordsCode(with: newCode)
+                                        updateStableQuodWordsCode(with: newCode, coordinate: fix.coordinate)
                                     }
                                     .onChange(of: locationManager.currentFix?.coordinate.longitude) {
                                         guard let fix = locationManager.currentFix else { return }
                                         let newCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
-                                        updateStableQuodWordsCode(with: newCode)
+                                        updateStableQuodWordsCode(with: newCode, coordinate: fix.coordinate)
                                     }
                                     
                                     Button("Send My Location") {
@@ -563,6 +567,17 @@ struct ContentView: View {
                         )
                         
                         guideSection(
+                            title: "GPS ACCURACY",
+                            body: """
+                            Phone GPS is approximate and may move or jitter, especially near buildings, trees, steep ground, or when satellite visibility is poor.
+                            
+                            Near a QuodWords cell boundary, Beacon may briefly hold the displayed code to avoid rapid flickering between neighbouring cells.
+                            
+                            The blue position marker shows live phone movement. The highlighted QuodWords cell shows the currently displayed location code.
+                            """
+                        )
+                        
+                        guideSection(
                             title: "RECORDING AND EXPORTS",
                             body: """
                             Recording controls are currently hidden in this beta build.
@@ -843,10 +858,25 @@ struct ContentView: View {
         let separators = CharacterSet.whitespacesAndNewlines
             .union(.punctuationCharacters)
 
-        let candidates = trimmed
+        let parts = trimmed
             .components(separatedBy: separators)
             .map { $0.uppercased() }
             .filter { !$0.isEmpty }
+
+        let compactCandidate = parts.joined()
+
+        let withoutTerritoryCandidate =
+            parts.first?.count == 2
+            ? parts.dropFirst().joined()
+            : ""
+
+        let candidates = Array(
+            Set(parts + [
+                compactCandidate,
+                withoutTerritoryCandidate
+            ])
+        )
+        .filter { !$0.isEmpty }
 
         for candidate in candidates {
             if let coordinate = QuodWordsResolver.resolve(
@@ -923,9 +953,10 @@ struct ContentView: View {
             .joined(separator: " ")
     }
     
-    private func updateStableQuodWordsCode(with newCode: String) {
+    private func updateStableQuodWordsCode(with newCode: String, coordinate: CLLocationCoordinate2D) {
         if displayedQuodWordsCode.isEmpty {
             displayedQuodWordsCode = newCode
+            displayedQuodWordsCoordinate = coordinate
             candidateQuodWordsCode = nil
             candidateQuodWordsSince = nil
             return
@@ -944,8 +975,9 @@ struct ContentView: View {
         }
 
         if let since = candidateQuodWordsSince,
-           Date().timeIntervalSince(since) >= 5 {
+           Date().timeIntervalSince(since) >= 3 {
             displayedQuodWordsCode = newCode
+            displayedQuodWordsCoordinate = coordinate
             candidateQuodWordsCode = nil
             candidateQuodWordsSince = nil
         }
@@ -975,6 +1007,7 @@ struct ContentView: View {
         let shortCode = displayedQuodWordsCode.isEmpty
             ? QuodWordsEncoder.shortCode(from: fix.coordinate)
             : displayedQuodWordsCode
+        let readableShortCode = displayShortCode(shortCode)
         let fullCode =
             QuodWordsEncoder.fullAreaCode(from:
                 fix.coordinate)
@@ -986,19 +1019,25 @@ struct ContentView: View {
         formatter.timeZone = .current
 
         let generatedTime = formatter.string(from: Date())
+        let latitude = String(format: "%.6f", fix.coordinate.latitude)
+        let longitude = String(format: "%.6f", fix.coordinate.longitude)
 
         let message = """
         My QuodWords location:
-        
-        SHORT code: 
-        \(shortCode)
+
+        SHORT code:
+        \(readableShortCode)
         
         LONG code:
         \(fullCode)
         
+        Latitude / Longitude:
+        \(latitude), \(longitude)
 
         Generated:
         \(generatedTime)
+
+        Note: QuodWords codes identify approximate location cells. They do not guarantee access, safety, or suitability for navigation.
         """
         
         let encodedMessage =
@@ -1127,6 +1166,25 @@ struct ContentView: View {
             digits: String(chars[3...5]),
             finalLetter: String(chars[6])
         )
+    }
+    
+    private func displayShortCode(_ code: String) -> String {
+        let compact = code
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .uppercased()
+        
+        guard compact.count == 7 else {
+            return code
+        }
+        
+        let first = compact.prefix(3)
+        let middleStart = compact.index(compact.startIndex, offsetBy: 3)
+        let middleEnd = compact.index(compact.startIndex, offsetBy: 6)
+        let middle = compact[middleStart..<middleEnd]
+        let last = compact.suffix(1)
+        
+        return "\(first) \(middle) \(last)"
     }
     
     @ViewBuilder
