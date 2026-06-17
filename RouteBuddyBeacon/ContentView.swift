@@ -549,6 +549,8 @@ struct ContentView: View {
                             
                             **Speak** — speaks the code aloud.
                             
+                            **Spell** — shows the code in NATO-style phonetic words so it can be read aloud clearly. Some numbers may be spoken in radio-style form, such as “Fife” for 5 and "Niner" for  9 to reduce confusion.
+                            
                             **Send My Location** — prepares a message containing your location details. You choose who to send it to.
                             
                             **Find Location** — paste or enter a QuodWords code to move the map to that location.
@@ -1037,7 +1039,7 @@ struct ContentView: View {
         Generated:
         \(generatedTime)
 
-        Note: QuodWords codes identify approximate location cells. They do not guarantee access, safety, or suitability for navigation.
+        Note: QuodWords codes identify approximate location cells. Use normal navigation and emergency procedures.
         """
         
         let encodedMessage =
