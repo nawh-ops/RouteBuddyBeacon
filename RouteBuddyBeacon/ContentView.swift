@@ -544,13 +544,9 @@ struct ContentView: View {
                             title: "MAIN CONTROLS",
                             body: """
                             **Copy** — copies your current location code.
-                            
-                            **Spell** — shows the code in phonetic form so it can be read clearly.
-                            
-                            **Speak** — speaks the code aloud.
-                            
-                            **Spell** — shows the code in NATO-style phonetic words so it can be read aloud clearly. Some numbers may be spoken in radio-style form, such as “Fife” for 5 and "Niner" for  9 to reduce confusion.
-                            
+
+                            **Spell** — shows the code in NATO-style phonetic words so it can be read aloud clearly. Some numbers may be spoken in radio-style form, such as “Fife” for 5 and "Niner" for  9 to reduce confusion.                       
+                            **Speak** — speaks the code aloud.                            
                             **Send My Location** — prepares a message containing your location details. You choose who to send it to.
                             
                             **Find Location** — paste or enter a QuodWords code to move the map to that location.
