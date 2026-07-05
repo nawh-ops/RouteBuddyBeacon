@@ -532,23 +532,16 @@ struct ContentView: View {
                             .font(.body)
                         
                         guideSection(
-                            title: "SHARE / GET RouteBuddy Beacon",
-                            body: """
-                            When RouteBuddy Beacon is available on the App Store, this section will show a QR code or link that another person can use to download the app.
-                            
-                            This is intended for quick sharing at a trail start, event, or when helping someone else install Beacon.
-                            """
-                        )
-                        
-                        guideSection(
                             title: "MAIN CONTROLS",
                             body: """
                             **Copy** — copies your current location code.
 
-                            **Spell** — shows the code in NATO-style phonetic words so it can be read aloud clearly. Some numbers may be spoken in radio-style form, such as “Fife” for 5 and "Niner" for  9 to reduce confusion.                       
-                            **Speak** — speaks the code aloud.                            
+                            **Spell** — shows the code in NATO-style phonetic words so it can be read aloud clearly. Some numbers may be spoken in radio-style form, such as “Fife” for 5 and "Niner" for 9 to reduce confusion.
+
+                            **Speak** — speaks the code aloud.
+
                             **Send My Location** — prepares a message containing your location details. You choose who to send it to.
-                            
+
                             **Find Location** — paste or enter a QuodWords code to move the map to that location.
                             """
                         )
@@ -558,7 +551,7 @@ struct ContentView: View {
                             body: """
                             Beacon needs location permission to show your live position.
                             
-                            Your phone can determine your GPS location without loading map tiles, but the visible map background may need a data connection.
+                            Beacon can determine and show your location without loading Apple Maps. The map background may require a data connection.
                             
                             If the map background does not load, your GPS position and QuodWords code may still be correct.
                             """
@@ -576,26 +569,14 @@ struct ContentView: View {
                         )
                         
                         guideSection(
-                            title: "RECORDING AND EXPORTS",
+                            title: "IMPORTANT SAFETY NOTE",
                             body: """
-                            Recording controls are currently hidden in this beta build.
-                            
-                            When enabled, recording can capture your route for later export.
-                            
-                            GPX and CSV exports are available when recording data exists.
-                            """
-                        )
-                        
-                        guideSection(
-                            title: "IMPORTANT BETA NOTE",
-                            body: """
-                            RouteBuddy Beacon is a beta app.
                             
                             QuodWords codes identify approximate location cells. They do not guarantee that a location is accessible, safe, on land, or suitable for navigation.
                             
-                            Beacon is not a marine navigation, distress, or rescue system.
+                            Beacon is not a marine navigation, distress or rescue system.
                             
-                            Do not rely on it as your only navigation or emergency safety tool.
+                            Do not rely on Beacon as your only navigation or emergency safety tool.
                             
                             Always use normal navigation judgement, suitable maps, and established emergency procedures.
                             """
@@ -620,14 +601,35 @@ struct ContentView: View {
                 Text(title)
                     .font(.headline.bold())
                 
-                Text(.init(body))
-                    .font(.body)
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 14) {
+                    ForEach(
+                        Array(
+                            body
+                                .replacingOccurrences(
+                                    of: "\n[ \t]*\n",
+                                    with: "\n\n",
+                                    options: .regularExpression
+                                )
+                                .components(separatedBy: "\n\n")
+                                .map {
+                                    $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                                }
+                                .filter { !$0.isEmpty }
+                                .enumerated()
+                        ),
+                        id: \.offset
+                    ) { _, paragraph in
+                        Text(.init(paragraph))
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
             }
         }
     }
-    
-    private struct CurrentCellHighlightOverlay: View {
+
+        private struct CurrentCellHighlightOverlay: View {
         let region: MKCoordinateRegion
         let coordinate: CLLocationCoordinate2D
         
