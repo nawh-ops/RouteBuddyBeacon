@@ -249,9 +249,16 @@ struct ContentView: View {
                                     TextField(
                                         "",
                                         text: $manualInput,
-                                        prompt: Text("Paste QuodWords Code")
+                                        prompt:
+                                            Text(
+                                                manualInputFocused
+                                                    ? ""
+                                                    : "Paste QuodWords Code"
+                                            )
+                                            .font(.body)
                                             .foregroundStyle(.blue)
                                     )
+                                    .font(slashedZeroFont(size: 28))
                                     .multilineTextAlignment(.center)
                                     .textFieldStyle(.roundedBorder)
                                     .foregroundStyle(.blue)
@@ -1187,12 +1194,38 @@ struct ContentView: View {
         return "\(first) \(middle) \(last)"
     }
     
+    private func slashedZeroFont(size: CGFloat) -> Font {
+        let baseFont = UIFont.monospacedSystemFont(
+            ofSize: size,
+            weight: .bold
+        )
+
+        let descriptor = baseFont.fontDescriptor.addingAttributes([
+            .featureSettings: [
+                [
+                    UIFontDescriptor.FeatureKey.type:
+                        kTypographicExtrasType,
+                    UIFontDescriptor.FeatureKey.selector:
+                        kSlashedZeroOnSelector
+                ]
+            ]
+        ])
+
+        return Font(
+            UIFont(
+                descriptor: descriptor,
+                size: size
+            )
+        )
+    }
+    
     @ViewBuilder
     private func displayQuodWordsCodeView(_ code: String) -> some View {
         if let parts = quodWordsDisplayParts(code) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(parts.letters)
                 Text(parts.digits)
+                    .font(slashedZeroFont(size: 48))
                 Text(parts.finalLetter)
             }
         } else {
