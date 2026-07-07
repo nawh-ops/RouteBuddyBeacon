@@ -350,8 +350,49 @@ if !exportURLs.isEmpty {
         errorMessage = nil
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        errorMessage = error.localizedDescription
+    func locationManager(
+        _ manager: CLLocationManager,
+        didFailWithError error: Error
+    ) {
+        guard let clError = error as? CLError else {
+            errorMessage = "Unable to determine your location."
+            return
+        }
+
+        switch clError.code {
+        case .locationUnknown:
+            // Temporary failure. Core Location may recover with a later fix.
+            return
+
+        case .denied:
+            switch manager.authorizationStatus {
+            case .denied:
+                errorMessage = """
+                Location access is off.
+                Enable location access for Beacon in iPhone Settings.
+                """
+
+            case .restricted:
+                errorMessage = """
+                Location access is restricted on this iPhone.
+                """
+
+            case .authorizedWhenInUse, .authorizedAlways:
+                // We are still authorised, so treat this as a transient
+                // startup/system-state failure and allow Core Location to recover.
+                return
+
+            case .notDetermined:
+                // Permission flow is not yet settled.
+                return
+
+            @unknown default:
+                errorMessage = "Unable to determine your location."
+            }
+
+        default:
+            errorMessage = "Unable to determine your location."
+        }
     }
     
     private func totalPointsOfSegments() -> Int {
