@@ -29,14 +29,19 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     @Published var recordingState: RecordingState = .idle
     @Published var exportURLs: [URL] = []
     @Published var shouldShowShareSheet = false
+    @Published var isPreciseLocationEnabled = true
 
     override init() {
         self.authorizationStatus = manager.authorizationStatus
+        
         super.init()
 
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.distanceFilter = kCLDistanceFilterNone
+        
+        isPreciseLocationEnabled =
+                manager.accuracyAuthorization == .fullAccuracy
     }
 
     func requestLocationPermission() {
@@ -68,6 +73,10 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
 
           authorizationStatus = manager.authorizationStatus
+        
+        isPreciseLocationEnabled =
+            manager.accuracyAuthorization ==
+                .fullAccuracy
 
           switch manager.authorizationStatus {
 
@@ -255,7 +264,20 @@ if !exportURLs.isEmpty {
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
+        guard let location = locations.last else {
+            return
+        }
+
+        let accuracy = location.horizontalAccuracy
+
+        // Reject obviously poor or invalid fixes before they update app state.
+        guard accuracy >= 0, accuracy <= 50 else {
+            errorMessage = String(
+                format: "Skipping low-quality fix (%.1f m).",
+                accuracy
+            )
+            return
+        }
         if recordingState == .recording {
             sessionStats.addLocation(location)
             recordedLocations.append(location)
@@ -285,13 +307,6 @@ if !exportURLs.isEmpty {
         BeaconLogger.log(message)
 
         let coordinate = location.coordinate
-        let accuracy = location.horizontalAccuracy
-
-        // Reject obviously poor or invalid fixes.
-        guard accuracy >= 0, accuracy <= 50 else {
-            errorMessage = String(format: "Skipping low-quality fix (%.1f m).", accuracy)
-            return
-        }
 
         if trackSegments.isEmpty {
             trackSegments.append([coordinate])

@@ -371,11 +371,27 @@ struct ContentView: View {
                             .font(.title3)
                             
                         } else {
-                            Text("Waiting for location...")
-                                .foregroundStyle(.secondary)
+                            if !locationManager.isPreciseLocationEnabled {
+                                VStack(spacing: 8) {
+                                    Text("Precise Location is off")
+                                        .font(.headline)
+
+                                    Text(
+                                        "Turn on Precise Location in iPhone Settings "
+                                        + "to generate an accurate QuodWords code."
+                                    )
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                }
+                                .padding(.horizontal)
+                            } else {
+                                Text("Waiting for location...")
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         
-                        if let errorMessage = locationManager.errorMessage {
+                        if locationManager.isPreciseLocationEnabled,
+                           let errorMessage = locationManager.errorMessage {
                             Text(errorMessage)
                                 .foregroundStyle(.red)
                                 .multilineTextAlignment(.center)
@@ -537,6 +553,18 @@ struct ContentView: View {
                         
                         Text("It is designed to show your current position, create a QuodWords location code, and help you share that location clearly when you are under pressure or data coverage is poor.")
                             .font(.body)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("PRECISE LOCATION")
+                                .font(.headline.bold())
+
+                            Text(
+                                "For an accurate QuodWords location, make sure "
+                                + "Precise Location is turned on for Beacon "
+                                + "in iPhone Settings."
+                            )
+                            .font(.body)
+                        }
                         
                         guideSection(
                             title: "MAIN CONTROLS",
