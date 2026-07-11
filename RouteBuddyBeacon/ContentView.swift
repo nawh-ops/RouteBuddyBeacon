@@ -576,8 +576,14 @@ struct ContentView: View {
                             **Speak** — speaks the code aloud.
 
                             **Send My Location** — prepares a message containing your location details. You choose who to send it to.
+                            
+                            **Navigate To Me** – prepares a message with a map link to help someone navigate to your position. You choose who to send it to.
 
-                            **Find Location** — paste or enter a QuodWords code to move the map to that location.
+                            Some phones may restrict links from unknown senders. If the map link is not tappable, the QuodWords code is still readable as plain text.
+
+                            In an emergency, contact the emergency services first.
+
+                            **Find Location** – paste or enter a QuodWords code to move the map to that location.
                             """
                         )
                         
