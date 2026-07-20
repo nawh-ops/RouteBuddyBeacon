@@ -1136,26 +1136,28 @@ struct ContentView: View {
     
     private func sendNavigateToMeSMS(using fix: BeaconFix) {
         pasteStatusMessage = nil
-        
-        guard !emergencyPhoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            pasteStatusMessage = "No phone number set"
-            return
-        }
-        
+
         let coordinate = fix.coordinate
-        
+
         let lat = coordinate.latitude
         let lon = coordinate.longitude
-        
+
         let mapsURL = "http://maps.apple.com/?daddr=\(lat),\(lon)"
-        
+
         let shortCode = QuodWordsEncoder.shortCode(from: coordinate)
         let fullCode = QuodWordsEncoder.fullAreaCode(from: coordinate)
-        
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "en_GB")
+        formatter.timeZone = .current
+
+        let generatedTime = formatter.string(from: Date())
+
         let message = """
         NAVIGATE TO ME:
         \(mapsURL)
-
 
         QUODWORDS CODE:
 
@@ -1164,17 +1166,19 @@ struct ContentView: View {
 
         LONG:
         \(fullCode)
+
+        GENERATED:
+        \(generatedTime)
         """
-        
+
         var allowed = CharacterSet.urlQueryAllowed
         allowed.remove(charactersIn: "&=?+")
-        
+
         let encodedMessage =
-        message.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
-        
-        let cleanedNumber = cleanPhoneNumber(emergencyPhoneNumber)
-        let smsURLString = "sms:\(cleanedNumber)?body=\(encodedMessage)"
-        
+            message.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+
+        let smsURLString = "sms:?body=\(encodedMessage)"
+
         if let url = URL(string: smsURLString) {
             UIApplication.shared.open(url)
         } else {
