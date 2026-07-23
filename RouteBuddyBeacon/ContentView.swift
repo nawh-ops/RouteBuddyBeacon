@@ -12,9 +12,6 @@ struct ContentView: View {
     @State private var displayedQuodWordsCoordinate: CLLocationCoordinate2D?
     @State private var candidateQuodWordsCode: String?
     @State private var candidateQuodWordsSince: Date?
-
-    @State private var emergencyPhoneNumber: String =
-        "07974919020"
     @StateObject private var locationManager = LocationManager()
     @State private var showDebug = false
     @State private var cameraPosition: MapCameraPosition = .region(
@@ -1089,49 +1086,7 @@ struct ContentView: View {
         if let url = URL(string: smsURLString) {
             UIApplication.shared.open(url)
         }
-    }
-    
-    private func sendMyLocationSMS(using fix: BeaconFix) {
-        pasteStatusMessage = nil
         
-        guard !emergencyPhoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            pasteStatusMessage = "No phone number set"
-            return
-        }
-        
-        let introMessage = "I'm here"
-        let shortCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
-        let fullCode = QuodWordsEncoder.fullAreaCode(from: fix.coordinate)
-        let message = "\(introMessage)\n\nSHORT: \(shortCode)\n\nLONG: \(fullCode)"
-        
-        let encodedMessage =
-        message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let cleanedNumber = cleanPhoneNumber(emergencyPhoneNumber)
-        let smsURLString = "sms:\(cleanedNumber)?body=\(encodedMessage)"
-        
-        if let url = URL(string: smsURLString) {
-            UIApplication.shared.open(url)
-        } else {
-            pasteStatusMessage = "Could not open Messages"
-        }
-        
-    }
-    private func cleanPhoneNumber(_ input: String) -> String {
-        var result = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if result.hasPrefix("00") {
-            result = "+" + result.dropFirst(2)
-        }
-        
-        result = result.filter { $0.isNumber || $0 == "+" }
-        
-        if result.hasPrefix("+") {
-            result = "+" + result.dropFirst().filter { $0.isNumber }
-        } else {
-            result = result.filter { $0.isNumber }
-        }
-        
-        return result
     }
     
     private func sendNavigateToMeSMS(using fix: BeaconFix) {
