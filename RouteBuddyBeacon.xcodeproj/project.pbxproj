@@ -6,11 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		D604E32030125E0100197043 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D611F9FC2F5C3FE5002AC49E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D611FA032F5C3FE5002AC49E;
+			remoteInfo = RouteBuddyBeacon;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		D604E31C30125E0100197043 /* RouteBuddyBeaconTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RouteBuddyBeaconTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D611FA042F5C3FE5002AC49E /* RouteBuddyBeacon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RouteBuddyBeacon.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		D604E30E3012566A00197043 /* RouteBuddyBeaconTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RouteBuddyBeaconTests;
+			sourceTree = "<group>";
+		};
 		D611FA062F5C3FE5002AC49E /* RouteBuddyBeacon */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = RouteBuddyBeacon;
@@ -19,6 +35,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D604E31930125E0100197043 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D611FA012F5C3FE5002AC49E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				D611FA062F5C3FE5002AC49E /* RouteBuddyBeacon */,
+				D604E30E3012566A00197043 /* RouteBuddyBeaconTests */,
 				D611FA052F5C3FE5002AC49E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				D611FA042F5C3FE5002AC49E /* RouteBuddyBeacon.app */,
+				D604E31C30125E0100197043 /* RouteBuddyBeaconTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +73,26 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D604E31B30125E0100197043 /* RouteBuddyBeaconTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D604E32230125E0100197043 /* Build configuration list for PBXNativeTarget "RouteBuddyBeaconTests" */;
+			buildPhases = (
+				D604E31830125E0100197043 /* Sources */,
+				D604E31930125E0100197043 /* Frameworks */,
+				D604E31A30125E0100197043 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D604E32130125E0100197043 /* PBXTargetDependency */,
+			);
+			name = RouteBuddyBeaconTests;
+			packageProductDependencies = (
+			);
+			productName = RouteBuddyBeaconTests;
+			productReference = D604E31C30125E0100197043 /* RouteBuddyBeaconTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		D611FA032F5C3FE5002AC49E /* RouteBuddyBeacon */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D611FA0F2F5C3FE6002AC49E /* Build configuration list for PBXNativeTarget "RouteBuddyBeacon" */;
@@ -80,6 +125,10 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
+					D604E31B30125E0100197043 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = D611FA032F5C3FE5002AC49E;
+					};
 					D611FA032F5C3FE5002AC49E = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -100,11 +149,19 @@
 			projectRoot = "";
 			targets = (
 				D611FA032F5C3FE5002AC49E /* RouteBuddyBeacon */,
+				D604E31B30125E0100197043 /* RouteBuddyBeaconTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D604E31A30125E0100197043 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D611FA022F5C3FE5002AC49E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +172,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D604E31830125E0100197043 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D611FA002F5C3FE5002AC49E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +188,57 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D604E32130125E0100197043 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D611FA032F5C3FE5002AC49E /* RouteBuddyBeacon */;
+			targetProxy = D604E32030125E0100197043 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		D604E32330125E0100197043 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MHB9NV48YW;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.routebuddy.RouteBuddyBeaconTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RouteBuddyBeacon.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RouteBuddyBeacon";
+			};
+			name = Debug;
+		};
+		D604E32430125E0100197043 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MHB9NV48YW;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.routebuddy.RouteBuddyBeaconTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RouteBuddyBeacon.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RouteBuddyBeacon";
+			};
+			name = Release;
+		};
 		D611FA0D2F5C3FE6002AC49E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -321,6 +435,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D604E32230125E0100197043 /* Build configuration list for PBXNativeTarget "RouteBuddyBeaconTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D604E32330125E0100197043 /* Debug */,
+				D604E32430125E0100197043 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D611F9FF2F5C3FE5002AC49E /* Build configuration list for PBXProject "RouteBuddyBeacon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
