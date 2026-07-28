@@ -1,0 +1,84 @@
+# QuodWords Territory Generator
+
+Status: Provisional engineering tool
+
+## Purpose
+
+This offline tool will generate deterministic QuodWords territory resources from frozen geographic source data.
+
+The first implementation targets the GB namespace, but the architecture is intended to support future territories worldwide through configuration rather than territory-specific rewrites.
+
+The tool will:
+
+1. load a frozen OpenStreetMap snapshot;
+2. select qualifying territory land and inland water;
+3. transform geometry into the configured projected coordinate system;
+4. construct the approved marine coverage mask;
+5. resolve neighbouring-territory overlaps;
+6. apply the fixed QuodWords grid;
+7. select valid cells using the approved centre-point rule;
+8. merge valid cells into ordered row spans;
+9. generate provisional national indices;
+10. produce audit reports, maps, statistics and checksums.
+
+## Current GB configuration
+
+The provisional GB resource uses:
+
+- territory code: `GB`;
+- public grammar: `LLLDDDL`;
+- formal grammar: `GB-LLLDDDL`;
+- projection: `EPSG:3035`;
+- grid origin: `(0, 0)`;
+- base cell size: `32 m`;
+- inclusion rule: cell centre covered by final mask;
+- marine distance: `25 nautical miles`;
+- geometry source: frozen OpenStreetMap snapshot;
+- Northern Ireland included in the GB namespace;
+- neighbouring namespaces reserved where appropriate.
+
+The numerical island-area threshold for generating the 25 NM marine buffer has not yet been frozen. Candidate thresholds will be tested against generated coverage.
+
+Required test outcomes include:
+
+- Foula generates marine coverage;
+- Fair Isle generates marine coverage;
+- Rockall does not independently generate a 25 NM marine buffer.
+
+## Current-code policy
+
+This generator must not alter or replace the temporary Beacon mapper during the provisional phase.
+
+Permanent public QuodWords indices must not be released until:
+
+- geometry policy is approved;
+- source data is frozen and archived;
+- provisional coverage has passed geographic audit;
+- capacity has been verified;
+- row-span invariants have passed;
+- binary resource format is approved;
+- mapping-version policy is approved.
+
+## Directory structure
+
+- `config/` — territory configuration files
+- `src/` — generator source code
+- `tests/` — generator and geometry tests
+- `input/` — local source data; large source files should not be committed
+- `output/` — generated provisional artefacts; generated files should not be committed unless explicitly approved
+
+## Worldwide architecture
+
+The generator is intended to support future territories through configuration of:
+
+- territory identifier;
+- governing OSM geometry;
+- projection and shared grid origin;
+- cell size and resource type;
+- marine-buffer policy;
+- neighbouring territories;
+- acceptance-test catalogue.
+
+The 32 m territory-base mapping is permanent once publicly released.
+
+Future finer-resolution products must be separate, aligned refinement resources and must not renumber or replace the released 32 m territory mapping.

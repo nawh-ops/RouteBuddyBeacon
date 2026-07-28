@@ -1,0 +1,61 @@
+territoryCode: GB
+status: provisional
+resourceType: territoryBase
+
+geometrySource:
+  type: OpenStreetMap
+  snapshotDate: null
+  extractProvider: null
+  downloadFilename: null
+  sourceChecksum: null
+  licence: ODbL-1.0
+
+grid:
+  projection: EPSG:3035
+  originX: 0
+  originY: 0
+  baseCellSizeMetres: 32
+  inclusionRule: centreCovered
+  boundaryCentreCountsAsCovered: true
+
+marine:
+  bufferDistanceNauticalMiles: 25
+  bufferDistanceMetres: 46300
+  candidateIslandThresholdsHectares:
+    - 0
+    - 1
+    - 5
+    - 10
+    - 25
+    - 50
+    - 100
+
+coverage:
+  includeEngland: true
+  includeScotland: true
+  includeWales: true
+  includeNorthernIreland: true
+  includeInlandWater: true
+  excludeForeignLand: true
+  reserveNeighbouringNamespaceCells: true
+
+neighbouringTerritories:
+  - IE
+  - IM
+  - JE
+  - GG
+  - FR
+
+requiredIslandTests:
+  bufferGenerating:
+    - Foula
+    - Fair Isle
+  nonBufferGenerating:
+    - Rockall
+
+publicGrammar:
+  national: LLLDDDL
+  formal: GB-LLLDDDL
+  finalSuffixExcludes:
+    - O
+  maximumCodeCount: 439400000
