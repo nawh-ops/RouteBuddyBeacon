@@ -1,0 +1,9 @@
+name: quodwords-territory
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - pyyaml
+  - pytest
