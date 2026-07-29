@@ -64,6 +64,33 @@ def test_valid_osmium_metadata_is_returned(
     assert inspection.header == metadata["header"]
 
 
+def test_file_format_is_used_when_data_format_is_absent(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source_path = tmp_path / "source.osm.pbf"
+    source_path.write_bytes(b"x")
+
+    metadata = {
+        "file": {"format": "PBF"},
+        "header": {},
+    }
+
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: _completed_process(
+            stdout=json.dumps(metadata),
+        ),
+    )
+
+    inspection = inspect_source_file(source_path)
+
+    assert inspection.file_format == "PBF"
+    assert inspection.data_format == "PBF"
+
+
+
 def test_expected_osmium_command_is_used(
     tmp_path: Path,
     monkeypatch,
@@ -191,10 +218,6 @@ def test_invalid_json_is_rejected(
         (
             {"file": {"data_format": "OSM"}, "header": {}},
             "missing the file format",
-        ),
-        (
-            {"file": {"format": "PBF"}, "header": {}},
-            "missing the data format",
         ),
     ],
 )

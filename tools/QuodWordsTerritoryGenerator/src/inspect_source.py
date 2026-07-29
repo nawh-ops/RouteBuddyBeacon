@@ -24,9 +24,16 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def format_summary(inspection: SourceFileInspection) -> str:
-    header_generator = inspection.header.get("generator")
+    header_options = inspection.header.get("option", {})
+    if not isinstance(header_options, dict):
+        header_options = {}
+
+    header_generator = inspection.header.get(
+        "generator", header_options.get("generator")
+    )
     replication_timestamp = inspection.header.get(
-        "osmosis_replication_timestamp"
+        "osmosis_replication_timestamp",
+        header_options.get("osmosis_replication_timestamp"),
     )
 
     generator_text = (

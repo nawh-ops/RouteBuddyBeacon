@@ -84,6 +84,27 @@ def test_main_prints_summary(
     assert captured.err == ""
 
 
+def test_format_summary_reads_nested_osmium_options(tmp_path: Path) -> None:
+    inspection = SourceFileInspection(
+        path=tmp_path / "source.osm.pbf",
+        file_format="PBF",
+        data_format="PBF",
+        file_size_bytes=25,
+        header={
+            "option": {
+                "generator": "osmium/1.16.0",
+                "osmosis_replication_timestamp": "2026-07-26T20:21:05Z",
+            }
+        },
+    )
+
+    summary = inspect_source.format_summary(inspection)
+
+    assert "Header generator: osmium/1.16.0" in summary
+    assert "Replication timestamp: 2026-07-26T20:21:05Z" in summary
+
+
+
 def test_main_reports_inspection_error(
     tmp_path: Path,
     monkeypatch,

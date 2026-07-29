@@ -81,7 +81,7 @@ def inspect_source_file(
         )
 
     file_format = file_info.get("format")
-    data_format = file_info.get("data_format")
+    data_format = file_info.get("data_format", file_format)
 
     if not isinstance(file_format, str) or not file_format:
         raise SourceFileInspectionError(
