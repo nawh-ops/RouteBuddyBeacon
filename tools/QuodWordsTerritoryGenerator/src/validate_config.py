@@ -5,6 +5,10 @@ import sys
 from pathlib import Path
 
 from config_loader import ConfigError, TerritoryConfig, load_config
+from geometry_source_manifest import (
+    GeometrySourceManifestError,
+    validate_frozen_geometry_source,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,6 +19,14 @@ def build_parser() -> argparse.ArgumentParser:
         "config",
         type=Path,
         help="Path to the territory YAML configuration file.",
+    )
+    parser.add_argument(
+        "--require-frozen-source",
+        action="store_true",
+        help=(
+            "Require complete reproducibility metadata for the "
+            "geometry source."
+        ),
     )
     return parser
 
@@ -56,7 +68,10 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         config = load_config(args.config)
-    except ConfigError as exc:
+
+        if args.require_frozen_source:
+            validate_frozen_geometry_source(config.geometry_source)
+    except (ConfigError, GeometrySourceManifestError) as exc:
         print(f"Configuration error: {exc}", file=sys.stderr)
         return 1
 
