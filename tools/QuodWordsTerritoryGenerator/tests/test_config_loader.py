@@ -59,6 +59,19 @@ def test_loads_provisional_gb_config() -> None:
     )
 
     assert config.neighbouring_territories == ("IE", "IM", "JE", "GG", "FR")
+
+    assert config.required_island_tests.buffer_generating == (
+        "Foula",
+        "Fair Isle",
+    )
+    assert config.required_island_tests.non_buffer_generating == (
+        "Rockall",
+    )
+
+    assert config.public_grammar.national == "LLLDDDL"
+    assert config.public_grammar.formal == "GB-LLLDDDL"
+    assert config.public_grammar.final_suffix_excludes == ("O",)
+    assert config.public_grammar.maximum_code_count == 439400000
     assert config.maximum_code_count == 439400000
 
 
@@ -289,5 +302,59 @@ def test_coverage_integer_boolean_is_rejected(tmp_path: Path) -> None:
     with pytest.raises(
         ConfigError,
         match="coverage.excludeForeignLand must be a boolean",
+    ):
+        load_config(config_path)
+
+
+def test_island_cannot_be_in_both_required_test_lists(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["requiredIslandTests"]["nonBufferGenerating"].append("Foula")
+
+    config_path = tmp_path / "overlapping-island-tests.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match=(
+            "requiredIslandTests entries cannot appear in both "
+            "bufferGenerating and nonBufferGenerating: Foula"
+        ),
+    ):
+        load_config(config_path)
+
+
+def test_duplicate_required_island_name_is_rejected(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["requiredIslandTests"]["bufferGenerating"].append("Foula")
+
+    config_path = tmp_path / "duplicate-island-test.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match=(
+            "requiredIslandTests.bufferGenerating "
+            "values must be unique"
+        ),
+    ):
+        load_config(config_path)
+
+
+def test_non_string_public_grammar_is_rejected(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["publicGrammar"]["national"] = 1234567
+
+    config_path = tmp_path / "numeric-public-grammar.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="publicGrammar.national must be a string",
     ):
         load_config(config_path)
