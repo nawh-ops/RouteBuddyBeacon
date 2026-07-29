@@ -7,3 +7,4 @@ dependencies:
   - python=3.12
   - pyyaml
   - pytest
+  - osmium-tool
