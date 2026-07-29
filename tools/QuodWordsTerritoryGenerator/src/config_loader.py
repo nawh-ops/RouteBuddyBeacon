@@ -6,6 +6,11 @@ from typing import Any
 
 import yaml
 
+from public_code_grammar import (
+    PublicCodeGrammarError,
+    calculate_capacity,
+)
+
 from config_values import (
     ConfigValueError,
     require_boolean,
@@ -462,6 +467,25 @@ def load_config(path: str | Path) -> TerritoryConfig:
             field="publicGrammar.maximumCodeCount",
             minimum=1,
         )
+
+        try:
+            calculated_code_count = calculate_capacity(
+                national_grammar,
+                final_suffix_excludes,
+            )
+        except PublicCodeGrammarError as exc:
+            raise ConfigError(
+                f"Invalid publicGrammar configuration: {exc}"
+            ) from exc
+
+        if maximum_code_count != calculated_code_count:
+            raise ConfigError(
+                "publicGrammar.maximumCodeCount does not match the "
+                "capacity calculated from publicGrammar.national and "
+                "publicGrammar.finalSuffixExcludes: "
+                f"configured {maximum_code_count:,}, "
+                f"calculated {calculated_code_count:,}."
+            )
 
     except ConfigValueError as exc:
         raise ConfigError(str(exc)) from exc

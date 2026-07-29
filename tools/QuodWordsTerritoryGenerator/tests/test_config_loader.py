@@ -358,3 +358,45 @@ def test_non_string_public_grammar_is_rejected(
         match="publicGrammar.national must be a string",
     ):
         load_config(config_path)
+
+
+def test_public_grammar_capacity_mismatch_is_rejected(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(
+        GB_CONFIG_PATH.read_text(encoding="utf-8")
+    )
+    raw["publicGrammar"]["maximumCodeCount"] = 439_399_999
+
+    config_path = tmp_path / "capacity-mismatch.yaml"
+    config_path.write_text(
+        yaml.safe_dump(raw),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ConfigError,
+        match="does not match the capacity calculated",
+    ):
+        load_config(config_path)
+
+
+def test_invalid_public_grammar_pattern_is_rejected(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(
+        GB_CONFIG_PATH.read_text(encoding="utf-8")
+    )
+    raw["publicGrammar"]["national"] = "LLXDDDL"
+
+    config_path = tmp_path / "invalid-grammar.yaml"
+    config_path.write_text(
+        yaml.safe_dump(raw),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ConfigError,
+        match="Invalid publicGrammar configuration",
+    ):
+        load_config(config_path)
