@@ -13,6 +13,7 @@ from config_values import (
     require_integer_list,
     require_optional_string,
     require_string,
+    require_string_list,
 )
 
 
@@ -42,6 +43,20 @@ class CoverageConfig:
 
 
 @dataclass(frozen=True)
+class RequiredIslandTestsConfig:
+    buffer_generating: tuple[str, ...]
+    non_buffer_generating: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PublicGrammarConfig:
+    national: str
+    formal: str
+    final_suffix_excludes: tuple[str, ...]
+    maximum_code_count: int
+
+
+@dataclass(frozen=True)
 class GridConfig:
     projection: str
     origin_x: int
@@ -65,10 +80,15 @@ class TerritoryConfig:
     resource_type: str
     geometry_source: GeometrySourceConfig
     coverage: CoverageConfig
+    required_island_tests: RequiredIslandTestsConfig
+    public_grammar: PublicGrammarConfig
     grid: GridConfig
     marine: MarineConfig
     neighbouring_territories: tuple[str, ...]
-    maximum_code_count: int
+
+    @property
+    def maximum_code_count(self) -> int:
+        return self.public_grammar.maximum_code_count
 
 
 def _require_mapping(data: Any, name: str) -> dict[str, Any]:
@@ -155,6 +175,10 @@ def load_config(path: str | Path) -> TerritoryConfig:
         marine_raw = _require_mapping(
             _require_value(root, "marine", "root"),
             "marine",
+        )
+        island_tests_raw = _require_mapping(
+            _require_value(root, "requiredIslandTests", "root"),
+            "requiredIslandTests",
         )
         grammar_raw = _require_mapping(
             _require_value(root, "publicGrammar", "root"),
@@ -380,6 +404,55 @@ def load_config(path: str | Path) -> TerritoryConfig:
             territory_code=territory_code,
         )
 
+        buffer_generating = require_string_list(
+            _require_value(
+                island_tests_raw,
+                "bufferGenerating",
+                "requiredIslandTests",
+            ),
+            field="requiredIslandTests.bufferGenerating",
+            allow_empty_list=False,
+            require_unique=True,
+        )
+        non_buffer_generating = require_string_list(
+            _require_value(
+                island_tests_raw,
+                "nonBufferGenerating",
+                "requiredIslandTests",
+            ),
+            field="requiredIslandTests.nonBufferGenerating",
+            allow_empty_list=False,
+            require_unique=True,
+        )
+
+        island_overlap = set(buffer_generating) & set(non_buffer_generating)
+        if island_overlap:
+            overlapping_names = ", ".join(sorted(island_overlap))
+            raise ConfigError(
+                "requiredIslandTests entries cannot appear in both "
+                "bufferGenerating and nonBufferGenerating: "
+                f"{overlapping_names}"
+            )
+
+        national_grammar = require_string(
+            _require_value(grammar_raw, "national", "publicGrammar"),
+            field="publicGrammar.national",
+        )
+        formal_grammar = require_string(
+            _require_value(grammar_raw, "formal", "publicGrammar"),
+            field="publicGrammar.formal",
+        )
+        final_suffix_excludes = require_string_list(
+            _require_value(
+                grammar_raw,
+                "finalSuffixExcludes",
+                "publicGrammar",
+            ),
+            field="publicGrammar.finalSuffixExcludes",
+            allow_empty_list=False,
+            require_unique=True,
+        )
+
         maximum_code_count = require_integer(
             _require_value(
                 grammar_raw,
@@ -399,6 +472,16 @@ def load_config(path: str | Path) -> TerritoryConfig:
         resource_type=resource_type,
         geometry_source=geometry_source,
         coverage=coverage,
+        required_island_tests=RequiredIslandTestsConfig(
+            buffer_generating=buffer_generating,
+            non_buffer_generating=non_buffer_generating,
+        ),
+        public_grammar=PublicGrammarConfig(
+            national=national_grammar,
+            formal=formal_grammar,
+            final_suffix_excludes=final_suffix_excludes,
+            maximum_code_count=maximum_code_count,
+        ),
         grid=GridConfig(
             projection=projection,
             origin_x=origin_x,
@@ -415,5 +498,4 @@ def load_config(path: str | Path) -> TerritoryConfig:
             candidate_island_thresholds_hectares=thresholds,
         ),
         neighbouring_territories=neighbours,
-        maximum_code_count=maximum_code_count,
     )
