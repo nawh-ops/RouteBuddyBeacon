@@ -6,6 +6,14 @@ from typing import Any
 
 import yaml
 
+from config_values import (
+    ConfigValueError,
+    require_boolean,
+    require_integer,
+    require_integer_list,
+    require_string,
+)
+
 
 class ConfigError(ValueError):
     """Raised when a territory configuration is missing or invalid."""
@@ -45,10 +53,51 @@ def _require_mapping(data: Any, name: str) -> dict[str, Any]:
     return data
 
 
-def _require_value(mapping: dict[str, Any], key: str, section: str) -> Any:
+def _require_value(
+    mapping: dict[str, Any],
+    key: str,
+    section: str,
+) -> Any:
     if key not in mapping:
         raise ConfigError(f"Missing required setting: {section}.{key}")
     return mapping[key]
+
+
+def _parse_territory_code(value: Any, *, field: str) -> str:
+    code = require_string(value, field=field).upper()
+
+    if len(code) != 2 or not code.isalpha():
+        raise ConfigValueError(
+            f"{field} must be exactly two letters."
+        )
+
+    return code
+
+
+def _parse_neighbouring_territories(
+    value: Any,
+    *,
+    territory_code: str,
+) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ConfigValueError(
+            "neighbouringTerritories must be a list."
+        )
+
+    neighbours = tuple(
+        _parse_territory_code(
+            item,
+            field=f"neighbouringTerritories[{index}]",
+        )
+        for index, item in enumerate(value)
+    )
+
+    if territory_code in neighbours:
+        raise ConfigValueError(
+            "A territory cannot list itself as a neighbouring territory."
+        )
+
+    return neighbours
 
 
 def load_config(path: str | Path) -> TerritoryConfig:
@@ -60,103 +109,156 @@ def load_config(path: str | Path) -> TerritoryConfig:
     try:
         raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
-        raise ConfigError(f"Invalid YAML in {config_path}: {exc}") from exc
-
-    root = _require_mapping(raw, "Configuration root")
-    grid_raw = _require_mapping(_require_value(root, "grid", "root"), "grid")
-    marine_raw = _require_mapping(_require_value(root, "marine", "root"), "marine")
-    grammar_raw = _require_mapping(
-        _require_value(root, "publicGrammar", "root"), "publicGrammar"
-    )
-
-    territory_code = str(_require_value(root, "territoryCode", "root")).upper()
-
-    if len(territory_code) != 2 or not territory_code.isalpha():
-        raise ConfigError("territoryCode must be exactly two letters.")
-
-    cell_size = int(
-        _require_value(grid_raw, "baseCellSizeMetres", "grid")
-    )
-    if cell_size <= 0:
-        raise ConfigError("grid.baseCellSizeMetres must be greater than zero.")
-
-    buffer_nm = int(
-        _require_value(marine_raw, "bufferDistanceNauticalMiles", "marine")
-    )
-    buffer_metres = int(
-        _require_value(marine_raw, "bufferDistanceMetres", "marine")
-    )
-
-    if buffer_nm <= 0 or buffer_metres <= 0:
-        raise ConfigError("Marine buffer distances must be greater than zero.")
-
-    expected_metres = buffer_nm * 1852
-    if buffer_metres != expected_metres:
         raise ConfigError(
-            "marine.bufferDistanceMetres must equal "
-            "marine.bufferDistanceNauticalMiles × 1852."
+            f"Invalid YAML in {config_path}: {exc}"
+        ) from exc
+
+    try:
+        root = _require_mapping(raw, "Configuration root")
+        grid_raw = _require_mapping(
+            _require_value(root, "grid", "root"),
+            "grid",
+        )
+        marine_raw = _require_mapping(
+            _require_value(root, "marine", "root"),
+            "marine",
+        )
+        grammar_raw = _require_mapping(
+            _require_value(root, "publicGrammar", "root"),
+            "publicGrammar",
         )
 
-    thresholds_raw = _require_value(
-        marine_raw, "candidateIslandThresholdsHectares", "marine"
-    )
-    if not isinstance(thresholds_raw, list) or not thresholds_raw:
-        raise ConfigError(
-            "marine.candidateIslandThresholdsHectares must be a non-empty list."
+        territory_code = _parse_territory_code(
+            _require_value(root, "territoryCode", "root"),
+            field="territoryCode",
         )
 
-    thresholds = tuple(int(value) for value in thresholds_raw)
-    if any(value < 0 for value in thresholds):
-        raise ConfigError("Island thresholds cannot be negative.")
-    if tuple(sorted(set(thresholds))) != thresholds:
-        raise ConfigError(
-            "Island thresholds must be unique and in ascending order."
+        status = require_string(
+            _require_value(root, "status", "root"),
+            field="status",
+        )
+        resource_type = require_string(
+            _require_value(root, "resourceType", "root"),
+            field="resourceType",
         )
 
-    neighbours_raw = _require_value(
-        root, "neighbouringTerritories", "root"
-    )
-    if not isinstance(neighbours_raw, list):
-        raise ConfigError("neighbouringTerritories must be a list.")
+        projection = require_string(
+            _require_value(grid_raw, "projection", "grid"),
+            field="grid.projection",
+        )
+        origin_x = require_integer(
+            _require_value(grid_raw, "originX", "grid"),
+            field="grid.originX",
+        )
+        origin_y = require_integer(
+            _require_value(grid_raw, "originY", "grid"),
+            field="grid.originY",
+        )
+        cell_size = require_integer(
+            _require_value(
+                grid_raw,
+                "baseCellSizeMetres",
+                "grid",
+            ),
+            field="grid.baseCellSizeMetres",
+            minimum=1,
+        )
+        inclusion_rule = require_string(
+            _require_value(grid_raw, "inclusionRule", "grid"),
+            field="grid.inclusionRule",
+        )
+        boundary_centre_counts_as_covered = require_boolean(
+            _require_value(
+                grid_raw,
+                "boundaryCentreCountsAsCovered",
+                "grid",
+            ),
+            field="grid.boundaryCentreCountsAsCovered",
+        )
 
-    neighbours = tuple(str(code).upper() for code in neighbours_raw)
-    if any(len(code) != 2 or not code.isalpha() for code in neighbours):
-        raise ConfigError(
-            "Every neighbouring territory code must be exactly two letters."
+        buffer_nm = require_integer(
+            _require_value(
+                marine_raw,
+                "bufferDistanceNauticalMiles",
+                "marine",
+            ),
+            field="marine.bufferDistanceNauticalMiles",
+            minimum=1,
         )
-    if territory_code in neighbours:
-        raise ConfigError(
-            "A territory cannot list itself as a neighbouring territory."
+        buffer_metres = require_integer(
+            _require_value(
+                marine_raw,
+                "bufferDistanceMetres",
+                "marine",
+            ),
+            field="marine.bufferDistanceMetres",
+            minimum=1,
         )
 
-    maximum_code_count = int(
-        _require_value(grammar_raw, "maximumCodeCount", "publicGrammar")
-    )
-    if maximum_code_count <= 0:
-        raise ConfigError(
-            "publicGrammar.maximumCodeCount must be greater than zero."
+        expected_metres = buffer_nm * 1852
+        if buffer_metres != expected_metres:
+            raise ConfigValueError(
+                "marine.bufferDistanceMetres must equal "
+                "marine.bufferDistanceNauticalMiles × 1852."
+            )
+
+        thresholds_raw = _require_value(
+            marine_raw,
+            "candidateIslandThresholdsHectares",
+            "marine",
         )
+
+        if not isinstance(thresholds_raw, list) or not thresholds_raw:
+            raise ConfigValueError(
+                "marine.candidateIslandThresholdsHectares "
+                "must be a non-empty list."
+            )
+
+        thresholds = require_integer_list(
+            thresholds_raw,
+            field="marine.candidateIslandThresholdsHectares",
+            minimum=0,
+        )
+
+        if tuple(sorted(set(thresholds))) != thresholds:
+            raise ConfigValueError(
+                "Island thresholds must be unique and in ascending order."
+            )
+
+        neighbours = _parse_neighbouring_territories(
+            _require_value(
+                root,
+                "neighbouringTerritories",
+                "root",
+            ),
+            territory_code=territory_code,
+        )
+
+        maximum_code_count = require_integer(
+            _require_value(
+                grammar_raw,
+                "maximumCodeCount",
+                "publicGrammar",
+            ),
+            field="publicGrammar.maximumCodeCount",
+            minimum=1,
+        )
+
+    except ConfigValueError as exc:
+        raise ConfigError(str(exc)) from exc
 
     return TerritoryConfig(
         territory_code=territory_code,
-        status=str(_require_value(root, "status", "root")),
-        resource_type=str(_require_value(root, "resourceType", "root")),
+        status=status,
+        resource_type=resource_type,
         grid=GridConfig(
-            projection=str(
-                _require_value(grid_raw, "projection", "grid")
-            ),
-            origin_x=int(_require_value(grid_raw, "originX", "grid")),
-            origin_y=int(_require_value(grid_raw, "originY", "grid")),
+            projection=projection,
+            origin_x=origin_x,
+            origin_y=origin_y,
             base_cell_size_metres=cell_size,
-            inclusion_rule=str(
-                _require_value(grid_raw, "inclusionRule", "grid")
-            ),
-            boundary_centre_counts_as_covered=bool(
-                _require_value(
-                    grid_raw,
-                    "boundaryCentreCountsAsCovered",
-                    "grid",
-                )
+            inclusion_rule=inclusion_rule,
+            boundary_centre_counts_as_covered=(
+                boundary_centre_counts_as_covered
             ),
         ),
         marine=MarineConfig(

@@ -108,3 +108,90 @@ def test_territory_cannot_be_its_own_neighbour(tmp_path: Path) -> None:
         match="cannot list itself",
     ):
         load_config(config_path)
+
+
+def test_string_boolean_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["grid"]["boundaryCentreCountsAsCovered"] = "false"
+
+    config_path = tmp_path / "string-boolean.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="grid.boundaryCentreCountsAsCovered must be a boolean",
+    ):
+        load_config(config_path)
+
+
+def test_string_cell_size_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["grid"]["baseCellSizeMetres"] = "32"
+
+    config_path = tmp_path / "string-cell-size.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="grid.baseCellSizeMetres must be an integer",
+    ):
+        load_config(config_path)
+
+
+def test_float_origin_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["grid"]["originX"] = 0.0
+
+    config_path = tmp_path / "float-origin.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="grid.originX must be an integer",
+    ):
+        load_config(config_path)
+
+
+def test_boolean_maximum_code_count_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["publicGrammar"]["maximumCodeCount"] = True
+
+    config_path = tmp_path / "boolean-capacity.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="publicGrammar.maximumCodeCount must be an integer",
+    ):
+        load_config(config_path)
+
+
+def test_string_threshold_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["marine"]["candidateIslandThresholdsHectares"][2] = "5"
+
+    config_path = tmp_path / "string-threshold.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match=(
+            r"marine\.candidateIslandThresholdsHectares\[2\] "
+            r"must be an integer"
+        ),
+    ):
+        load_config(config_path)
+
+
+def test_non_string_neighbour_code_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["neighbouringTerritories"][0] = 12
+
+    config_path = tmp_path / "numeric-neighbour.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match=r"neighbouringTerritories\[0\] must be a string",
+    ):
+        load_config(config_path)
