@@ -15,7 +15,9 @@ from config_values import (  # noqa: E402
     require_boolean,
     require_integer,
     require_integer_list,
+    require_optional_string,
     require_string,
+    require_string_list,
 )
 
 
@@ -115,4 +117,72 @@ def test_unsorted_list_values_are_rejected() -> None:
             [0, 5, 1],
             field="marine.candidateThresholds",
             require_ascending=True,
+        )
+
+
+def test_optional_string_accepts_none() -> None:
+    assert require_optional_string(
+        None,
+        field="geometrySource.snapshotDate",
+    ) is None
+
+
+def test_optional_string_accepts_string() -> None:
+    assert require_optional_string(
+        "2026-07-29",
+        field="geometrySource.snapshotDate",
+    ) == "2026-07-29"
+
+
+def test_optional_string_rejects_non_string_value() -> None:
+    with pytest.raises(ConfigValueError, match="must be a string"):
+        require_optional_string(
+            20260729,
+            field="geometrySource.snapshotDate",
+        )
+
+
+def test_valid_string_list_is_returned() -> None:
+    assert require_string_list(
+        ["Foula", "Fair Isle"],
+        field="requiredIslandTests.bufferGenerating",
+        allow_empty_list=False,
+        require_unique=True,
+    ) == ("Foula", "Fair Isle")
+
+
+def test_string_list_rejects_non_list() -> None:
+    with pytest.raises(ConfigValueError, match="must be a list"):
+        require_string_list(
+            "Foula",
+            field="requiredIslandTests.bufferGenerating",
+        )
+
+
+def test_string_list_rejects_non_string_member() -> None:
+    with pytest.raises(
+        ConfigValueError,
+        match=r"bufferGenerating\[1\] must be a string",
+    ):
+        require_string_list(
+            ["Foula", 12],
+            field="requiredIslandTests.bufferGenerating",
+        )
+
+
+def test_required_string_list_rejects_empty_list() -> None:
+    with pytest.raises(ConfigValueError, match="must not be empty"):
+        require_string_list(
+            [],
+            field="requiredIslandTests.bufferGenerating",
+            allow_empty_list=False,
+        )
+
+
+def test_string_list_rejects_duplicates_when_required() -> None:
+    with pytest.raises(ConfigValueError, match="must be unique"):
+        require_string_list(
+            ["Foula", "Foula"],
+            field="requiredIslandTests.bufferGenerating",
+            require_unique=True,
         )

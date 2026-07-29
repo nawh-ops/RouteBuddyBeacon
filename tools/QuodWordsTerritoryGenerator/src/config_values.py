@@ -75,3 +75,46 @@ def require_integer_list(
         )
 
     return parsed
+
+
+def require_optional_string(
+    value: Any,
+    *,
+    field: str,
+    allow_empty: bool = False,
+) -> str | None:
+    if value is None:
+        return None
+
+    return require_string(
+        value,
+        field=field,
+        allow_empty=allow_empty,
+    )
+
+
+def require_string_list(
+    value: Any,
+    *,
+    field: str,
+    allow_empty_list: bool = True,
+    require_unique: bool = False,
+) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ConfigValueError(f"{field} must be a list.")
+
+    if not allow_empty_list and not value:
+        raise ConfigValueError(f"{field} must not be empty.")
+
+    parsed = tuple(
+        require_string(
+            item,
+            field=f"{field}[{index}]",
+        )
+        for index, item in enumerate(value)
+    )
+
+    if require_unique and len(set(parsed)) != len(parsed):
+        raise ConfigValueError(f"{field} values must be unique.")
+
+    return parsed
