@@ -11,12 +11,34 @@ from config_values import (
     require_boolean,
     require_integer,
     require_integer_list,
+    require_optional_string,
     require_string,
 )
 
 
 class ConfigError(ValueError):
     """Raised when a territory configuration is missing or invalid."""
+
+
+@dataclass(frozen=True)
+class GeometrySourceConfig:
+    source_type: str
+    snapshot_date: str | None
+    extract_provider: str | None
+    download_filename: str | None
+    source_checksum: str | None
+    licence: str
+
+
+@dataclass(frozen=True)
+class CoverageConfig:
+    include_england: bool
+    include_scotland: bool
+    include_wales: bool
+    include_northern_ireland: bool
+    include_inland_water: bool
+    exclude_foreign_land: bool
+    reserve_neighbouring_namespace_cells: bool
 
 
 @dataclass(frozen=True)
@@ -41,6 +63,8 @@ class TerritoryConfig:
     territory_code: str
     status: str
     resource_type: str
+    geometry_source: GeometrySourceConfig
+    coverage: CoverageConfig
     grid: GridConfig
     marine: MarineConfig
     neighbouring_territories: tuple[str, ...]
@@ -115,6 +139,15 @@ def load_config(path: str | Path) -> TerritoryConfig:
 
     try:
         root = _require_mapping(raw, "Configuration root")
+
+        geometry_raw = _require_mapping(
+            _require_value(root, "geometrySource", "root"),
+            "geometrySource",
+        )
+        coverage_raw = _require_mapping(
+            _require_value(root, "coverage", "root"),
+            "coverage",
+        )
         grid_raw = _require_mapping(
             _require_value(root, "grid", "root"),
             "grid",
@@ -140,6 +173,119 @@ def load_config(path: str | Path) -> TerritoryConfig:
         resource_type = require_string(
             _require_value(root, "resourceType", "root"),
             field="resourceType",
+        )
+
+        geometry_source = GeometrySourceConfig(
+            source_type=require_string(
+                _require_value(
+                    geometry_raw,
+                    "type",
+                    "geometrySource",
+                ),
+                field="geometrySource.type",
+            ),
+            snapshot_date=require_optional_string(
+                _require_value(
+                    geometry_raw,
+                    "snapshotDate",
+                    "geometrySource",
+                ),
+                field="geometrySource.snapshotDate",
+            ),
+            extract_provider=require_optional_string(
+                _require_value(
+                    geometry_raw,
+                    "extractProvider",
+                    "geometrySource",
+                ),
+                field="geometrySource.extractProvider",
+            ),
+            download_filename=require_optional_string(
+                _require_value(
+                    geometry_raw,
+                    "downloadFilename",
+                    "geometrySource",
+                ),
+                field="geometrySource.downloadFilename",
+            ),
+            source_checksum=require_optional_string(
+                _require_value(
+                    geometry_raw,
+                    "sourceChecksum",
+                    "geometrySource",
+                ),
+                field="geometrySource.sourceChecksum",
+            ),
+            licence=require_string(
+                _require_value(
+                    geometry_raw,
+                    "licence",
+                    "geometrySource",
+                ),
+                field="geometrySource.licence",
+            ),
+        )
+
+        coverage = CoverageConfig(
+            include_england=require_boolean(
+                _require_value(
+                    coverage_raw,
+                    "includeEngland",
+                    "coverage",
+                ),
+                field="coverage.includeEngland",
+            ),
+            include_scotland=require_boolean(
+                _require_value(
+                    coverage_raw,
+                    "includeScotland",
+                    "coverage",
+                ),
+                field="coverage.includeScotland",
+            ),
+            include_wales=require_boolean(
+                _require_value(
+                    coverage_raw,
+                    "includeWales",
+                    "coverage",
+                ),
+                field="coverage.includeWales",
+            ),
+            include_northern_ireland=require_boolean(
+                _require_value(
+                    coverage_raw,
+                    "includeNorthernIreland",
+                    "coverage",
+                ),
+                field="coverage.includeNorthernIreland",
+            ),
+            include_inland_water=require_boolean(
+                _require_value(
+                    coverage_raw,
+                    "includeInlandWater",
+                    "coverage",
+                ),
+                field="coverage.includeInlandWater",
+            ),
+            exclude_foreign_land=require_boolean(
+                _require_value(
+                    coverage_raw,
+                    "excludeForeignLand",
+                    "coverage",
+                ),
+                field="coverage.excludeForeignLand",
+            ),
+            reserve_neighbouring_namespace_cells=require_boolean(
+                _require_value(
+                    coverage_raw,
+                    "reserveNeighbouringNamespaceCells",
+                    "coverage",
+                ),
+                field=(
+                    "coverage."
+                    "reserveNeighbouringNamespaceCells"
+                ),
+            ),
         )
 
         projection = require_string(
@@ -251,6 +397,8 @@ def load_config(path: str | Path) -> TerritoryConfig:
         territory_code=territory_code,
         status=status,
         resource_type=resource_type,
+        geometry_source=geometry_source,
+        coverage=coverage,
         grid=GridConfig(
             projection=projection,
             origin_x=origin_x,

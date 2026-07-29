@@ -24,6 +24,21 @@ def test_loads_provisional_gb_config() -> None:
     assert config.status == "provisional"
     assert config.resource_type == "territoryBase"
 
+    assert config.geometry_source.source_type == "OpenStreetMap"
+    assert config.geometry_source.snapshot_date is None
+    assert config.geometry_source.extract_provider is None
+    assert config.geometry_source.download_filename is None
+    assert config.geometry_source.source_checksum is None
+    assert config.geometry_source.licence == "ODbL-1.0"
+
+    assert config.coverage.include_england is True
+    assert config.coverage.include_scotland is True
+    assert config.coverage.include_wales is True
+    assert config.coverage.include_northern_ireland is True
+    assert config.coverage.include_inland_water is True
+    assert config.coverage.exclude_foreign_land is True
+    assert config.coverage.reserve_neighbouring_namespace_cells is True
+
     assert config.grid.projection == "EPSG:3035"
     assert config.grid.origin_x == 0
     assert config.grid.origin_y == 0
@@ -193,5 +208,86 @@ def test_non_string_neighbour_code_is_rejected(tmp_path: Path) -> None:
     with pytest.raises(
         ConfigError,
         match=r"neighbouringTerritories\[0\] must be a string",
+    ):
+        load_config(config_path)
+
+
+def test_geometry_source_optional_metadata_accepts_strings(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["geometrySource"]["snapshotDate"] = "2026-07-29"
+    raw["geometrySource"]["extractProvider"] = "Test Provider"
+    raw["geometrySource"]["downloadFilename"] = "planet-test.osm.pbf"
+    raw["geometrySource"]["sourceChecksum"] = "sha256:test"
+
+    config_path = tmp_path / "geometry-metadata.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    config = load_config(config_path)
+
+    assert config.geometry_source.snapshot_date == "2026-07-29"
+    assert config.geometry_source.extract_provider == "Test Provider"
+    assert (
+        config.geometry_source.download_filename
+        == "planet-test.osm.pbf"
+    )
+    assert config.geometry_source.source_checksum == "sha256:test"
+
+
+def test_geometry_source_numeric_snapshot_date_is_rejected(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["geometrySource"]["snapshotDate"] = 20260729
+
+    config_path = tmp_path / "numeric-snapshot-date.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="geometrySource.snapshotDate must be a string",
+    ):
+        load_config(config_path)
+
+
+def test_geometry_source_type_must_be_string(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["geometrySource"]["type"] = 123
+
+    config_path = tmp_path / "numeric-source-type.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="geometrySource.type must be a string",
+    ):
+        load_config(config_path)
+
+
+def test_coverage_string_boolean_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["coverage"]["includeNorthernIreland"] = "true"
+
+    config_path = tmp_path / "string-coverage-boolean.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="coverage.includeNorthernIreland must be a boolean",
+    ):
+        load_config(config_path)
+
+
+def test_coverage_integer_boolean_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["coverage"]["excludeForeignLand"] = 1
+
+    config_path = tmp_path / "integer-coverage-boolean.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="coverage.excludeForeignLand must be a boolean",
     ):
         load_config(config_path)
