@@ -37,7 +37,9 @@ The provisional GB resource uses:
 - Northern Ireland included in the GB namespace;
 - neighbouring namespaces reserved where appropriate.
 
-The numerical island-area threshold for generating the 25 NM marine buffer has not yet been frozen. Candidate thresholds will be tested against generated coverage.
+All qualifying permanent GB land generates the 25 NM marine buffer regardless of area. Rockall is the configured non-buffer-generating exception.
+
+The candidate island-area thresholds remain available only for geographic audit and comparison; they do not determine production buffer eligibility.
 
 Required test outcomes include:
 
