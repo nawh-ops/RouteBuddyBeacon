@@ -82,6 +82,18 @@ Verify the actual frozen geographic source file against the configured filename 
   tools/QuodWordsTerritoryGenerator/input
 ```
 
+Generate the provisional GB permanent-land candidate dataset:
+
+```bash
+~/miniforge3/bin/conda run -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/select_gb_land.py \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/uk-boundary-only.geojson \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/island-candidates.geojson \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-candidates.geojson
+```
+
+The generated land-candidate file is an ignored geographic-audit artifact. It is not a released QuodWords index and does not alter the temporary Beacon mapper.
+
 Run the complete configured island-policy audit against the generated island dataset:
 
 ```bash
