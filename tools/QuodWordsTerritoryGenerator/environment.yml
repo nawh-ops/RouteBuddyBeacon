@@ -8,3 +8,5 @@ dependencies:
   - pyyaml
   - pytest
   - osmium-tool
+  - pyproj
+  - shapely
