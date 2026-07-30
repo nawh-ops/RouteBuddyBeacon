@@ -25,10 +25,17 @@ def test_loads_provisional_gb_config() -> None:
     assert config.resource_type == "territoryBase"
 
     assert config.geometry_source.source_type == "OpenStreetMap"
-    assert config.geometry_source.snapshot_date is None
-    assert config.geometry_source.extract_provider is None
-    assert config.geometry_source.download_filename is None
-    assert config.geometry_source.source_checksum is None
+    assert config.geometry_source.snapshot_date == "2026-07-26"
+    assert config.geometry_source.extract_provider == "Geofabrik"
+    assert (
+        config.geometry_source.download_filename
+        == "britain-and-ireland-260726.osm.pbf"
+    )
+    assert (
+        config.geometry_source.source_checksum
+        == "sha256:c5a12a4c9b55fc870b78eda356f0d739"
+        "967fdb1d920003ccabc2cd3a19c7321c"
+    )
     assert config.geometry_source.licence == "ODbL-1.0"
 
     assert config.coverage.include_england is True

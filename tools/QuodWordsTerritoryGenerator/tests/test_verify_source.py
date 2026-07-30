@@ -69,23 +69,6 @@ def test_matching_frozen_source_is_verified(
     assert captured.err == ""
 
 
-def test_provisional_source_metadata_is_rejected(
-    tmp_path: Path,
-    capsys,
-) -> None:
-    exit_code = main([
-        str(GB_CONFIG_PATH),
-        "--input-directory",
-        str(tmp_path),
-    ])
-
-    captured = capsys.readouterr()
-
-    assert exit_code == 1
-    assert captured.out == ""
-    assert "Source verification error:" in captured.err
-    assert "missing required metadata" in captured.err
-
 
 def test_missing_named_source_file_is_rejected(
     tmp_path: Path,

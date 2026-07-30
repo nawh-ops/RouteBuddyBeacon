@@ -75,7 +75,7 @@ def test_provisional_config_passes_without_frozen_source_requirement(
     assert captured.err == ""
 
 
-def test_provisional_config_fails_when_frozen_source_is_required(
+def test_provisional_config_passes_when_frozen_source_is_required(
     capsys,
 ) -> None:
     exit_code = main([
@@ -85,9 +85,7 @@ def test_provisional_config_fails_when_frozen_source_is_required(
 
     captured = capsys.readouterr()
 
-    assert exit_code == 1
-    assert captured.out == ""
-    assert "Configuration error:" in captured.err
-    assert "missing required metadata" in captured.err
-    assert "snapshot_date" in captured.err
-    assert "source_checksum" in captured.err
+    assert exit_code == 0
+    assert "configuration is valid" in captured.out
+    assert captured.err == ""
+

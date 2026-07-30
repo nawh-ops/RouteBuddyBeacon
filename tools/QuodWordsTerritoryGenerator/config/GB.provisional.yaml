@@ -4,10 +4,10 @@ resourceType: territoryBase
 
 geometrySource:
   type: OpenStreetMap
-  snapshotDate: null
-  extractProvider: null
-  downloadFilename: null
-  sourceChecksum: null
+  snapshotDate: "2026-07-26"
+  extractProvider: Geofabrik
+  downloadFilename: britain-and-ireland-260726.osm.pbf
+  sourceChecksum: sha256:c5a12a4c9b55fc870b78eda356f0d739967fdb1d920003ccabc2cd3a19c7321c
   licence: ODbL-1.0
 
 grid:
