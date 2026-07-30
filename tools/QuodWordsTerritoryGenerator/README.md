@@ -63,12 +63,23 @@ Permanent public QuodWords indices must not be released until:
 
 ## Verification commands
 
-Validate the provisional territory configuration:
+Validate the territory configuration and require frozen source metadata:
 
 ```bash
 ~/miniforge3/bin/conda run -n quodwords-territory \
   python tools/QuodWordsTerritoryGenerator/src/validate_config.py \
-  tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml
+  tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml \
+  --require-frozen-source
+```
+
+Verify the actual frozen geographic source file against the configured filename and SHA-256 checksum:
+
+```bash
+~/miniforge3/bin/conda run -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/verify_source.py \
+  tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml \
+  --input-directory \
+  tools/QuodWordsTerritoryGenerator/input
 ```
 
 Run the complete configured island-policy audit against the generated island dataset:
