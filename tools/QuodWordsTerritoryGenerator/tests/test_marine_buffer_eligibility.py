@@ -13,6 +13,7 @@ sys.path.insert(0, str(SRC_DIR))
 from marine_buffer_eligibility import (  # noqa: E402
     MarineBufferEligibilityError,
     generates_marine_buffer,
+    generates_marine_buffer_from_config,
 )
 
 
@@ -81,4 +82,38 @@ def test_non_string_exception_is_rejected() -> None:
                 "Rockall",
                 123,  # type: ignore[arg-type]
             ),
+        )
+
+
+def test_loaded_configuration_controls_eligibility() -> None:
+    from config_loader import load_config
+
+    config = load_config(
+        GENERATOR_ROOT / "config" / "GB.provisional.yaml"
+    )
+
+    assert generates_marine_buffer_from_config(
+        "Foula",
+        marine_config=config.marine,
+    )
+    assert not generates_marine_buffer_from_config(
+        "Rockall",
+        marine_config=config.marine,
+    )
+
+
+def test_config_without_exception_setting_is_rejected() -> None:
+    class InvalidMarineConfig:
+        pass
+
+    with pytest.raises(
+        MarineBufferEligibilityError,
+        match=(
+            "marine_config must provide "
+            "non_buffer_generating_exceptions"
+        ),
+    ):
+        generates_marine_buffer_from_config(
+            "Foula",
+            marine_config=InvalidMarineConfig(),
         )

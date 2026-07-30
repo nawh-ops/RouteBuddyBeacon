@@ -26,3 +26,22 @@ def generates_marine_buffer(
         )
 
     return feature_name not in non_buffer_generating_exceptions
+
+
+def generates_marine_buffer_from_config(
+    feature_name: str | None,
+    *,
+    marine_config: object,
+) -> bool:
+    try:
+        exceptions = marine_config.non_buffer_generating_exceptions
+    except AttributeError as exc:
+        raise MarineBufferEligibilityError(
+            "marine_config must provide "
+            "non_buffer_generating_exceptions."
+        ) from exc
+
+    return generates_marine_buffer(
+        feature_name,
+        non_buffer_generating_exceptions=exceptions,
+    )
