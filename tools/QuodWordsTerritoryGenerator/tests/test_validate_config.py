@@ -24,6 +24,14 @@ def test_format_summary_contains_key_gb_settings() -> None:
     assert "Projection: EPSG:3035" in summary
     assert "Grid: 32 m cells, origin (0, 0)" in summary
     assert "Marine buffer: 25 NM (46300 m)" in summary
+    assert (
+        "Marine eligibility: allQualifyingPermanentLand"
+        in summary
+    )
+    assert (
+        "Non-buffer-generating exceptions: Rockall"
+        in summary
+    )
     assert "Neighbouring territories: IE, IM, JE, GG, FR" in summary
     assert "Maximum public-code capacity: 439,400,000" in summary
 

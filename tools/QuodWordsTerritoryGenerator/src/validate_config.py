@@ -37,6 +37,9 @@ def format_summary(config: TerritoryConfig) -> str:
         str(value)
         for value in config.marine.candidate_island_thresholds_hectares
     )
+    exceptions = ", ".join(
+        config.marine.non_buffer_generating_exceptions
+    ) or "none"
 
     return "\n".join(
         (
@@ -54,6 +57,14 @@ def format_summary(config: TerritoryConfig) -> str:
                 "Marine buffer: "
                 f"{config.marine.buffer_distance_nautical_miles} NM "
                 f"({config.marine.buffer_distance_metres} m)"
+            ),
+            (
+                "Marine eligibility: "
+                f"{config.marine.buffer_eligibility_policy}"
+            ),
+            (
+                "Non-buffer-generating exceptions: "
+                f"{exceptions}"
             ),
             f"Candidate island thresholds: {thresholds} hectares",
             f"Neighbouring territories: {neighbours}",
