@@ -61,6 +61,34 @@ Permanent public QuodWords indices must not be released until:
 - binary resource format is approved;
 - mapping-version policy is approved.
 
+## Verification commands
+
+Validate the provisional territory configuration:
+
+```bash
+~/miniforge3/bin/conda run -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/validate_config.py \
+  tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml
+```
+
+Run the complete configured island-policy audit against the generated island dataset:
+
+```bash
+~/miniforge3/bin/conda run -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/verify_island_policy.py \
+  tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/island-candidates.geojson
+```
+
+The combined command verifies the configured exception matches and the required outcomes for Foula, Fair Isle and Rockall. The lower-level `verify_marine_exceptions.py` and `verify_required_islands.py` commands remain available for diagnosis.
+
+Run the complete automated test suite:
+
+```bash
+~/miniforge3/bin/conda run -n quodwords-territory \
+  pytest -q tools/QuodWordsTerritoryGenerator/tests
+```
+
 ## Directory structure
 
 - `config/` — territory configuration files
