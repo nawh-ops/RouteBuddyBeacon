@@ -21,6 +21,9 @@ grid:
 marine:
   bufferDistanceNauticalMiles: 25
   bufferDistanceMetres: 46300
+  bufferEligibilityPolicy: allQualifyingPermanentLand
+  nonBufferGeneratingExceptions:
+    - Rockall
   candidateIslandThresholdsHectares:
     - 0
     - 1

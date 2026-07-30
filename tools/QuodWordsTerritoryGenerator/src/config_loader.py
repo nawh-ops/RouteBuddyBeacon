@@ -75,6 +75,8 @@ class GridConfig:
 class MarineConfig:
     buffer_distance_nautical_miles: int
     buffer_distance_metres: int
+    buffer_eligibility_policy: str
+    non_buffer_generating_exceptions: tuple[str, ...]
     candidate_island_thresholds_hectares: tuple[int, ...]
 
 
@@ -377,6 +379,30 @@ def load_config(path: str | Path) -> TerritoryConfig:
                 "marine.bufferDistanceNauticalMiles × 1852."
             )
 
+        buffer_eligibility_policy = require_string(
+            _require_value(
+                marine_raw,
+                "bufferEligibilityPolicy",
+                "marine",
+            ),
+            field="marine.bufferEligibilityPolicy",
+        )
+        if buffer_eligibility_policy != "allQualifyingPermanentLand":
+            raise ConfigValueError(
+                "marine.bufferEligibilityPolicy must be "
+                "allQualifyingPermanentLand."
+            )
+
+        non_buffer_generating_exceptions = require_string_list(
+            _require_value(
+                marine_raw,
+                "nonBufferGeneratingExceptions",
+                "marine",
+            ),
+            field="marine.nonBufferGeneratingExceptions",
+            require_unique=True,
+        )
+
         thresholds_raw = _require_value(
             marine_raw,
             "candidateIslandThresholdsHectares",
@@ -519,6 +545,10 @@ def load_config(path: str | Path) -> TerritoryConfig:
         marine=MarineConfig(
             buffer_distance_nautical_miles=buffer_nm,
             buffer_distance_metres=buffer_metres,
+            buffer_eligibility_policy=buffer_eligibility_policy,
+            non_buffer_generating_exceptions=(
+                non_buffer_generating_exceptions
+            ),
             candidate_island_thresholds_hectares=thresholds,
         ),
         neighbouring_territories=neighbours,

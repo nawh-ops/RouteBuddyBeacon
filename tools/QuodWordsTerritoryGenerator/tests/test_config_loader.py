@@ -400,3 +400,67 @@ def test_invalid_public_grammar_pattern_is_rejected(
         match="Invalid publicGrammar configuration",
     ):
         load_config(config_path)
+
+def test_marine_policy_is_loaded() -> None:
+    config = load_config(GB_CONFIG_PATH)
+
+    assert (
+        config.marine.buffer_eligibility_policy
+        == "allQualifyingPermanentLand"
+    )
+    assert config.marine.non_buffer_generating_exceptions == (
+        "Rockall",
+    )
+
+
+def test_unknown_marine_policy_is_rejected(tmp_path: Path) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["marine"]["bufferEligibilityPolicy"] = "areaThreshold"
+
+    config_path = tmp_path / "unknown-marine-policy.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="must be allQualifyingPermanentLand",
+    ):
+        load_config(config_path)
+
+
+def test_duplicate_non_buffer_exceptions_are_rejected(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["marine"]["nonBufferGeneratingExceptions"] = [
+        "Rockall",
+        "Rockall",
+    ]
+
+    config_path = tmp_path / "duplicate-marine-exceptions.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match="values must be unique",
+    ):
+        load_config(config_path)
+
+
+def test_non_buffer_exception_must_be_a_string(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
+    raw["marine"]["nonBufferGeneratingExceptions"] = [123]
+
+    config_path = tmp_path / "numeric-marine-exception.yaml"
+    config_path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    with pytest.raises(
+        ConfigError,
+        match=(
+            r"marine\.nonBufferGeneratingExceptions\[0\] "
+            r"must be a string"
+        ),
+    ):
+        load_config(config_path)
+
