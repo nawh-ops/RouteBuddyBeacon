@@ -94,6 +94,13 @@ Generate the provisional GB permanent-land candidate dataset:
 
 The generated land-candidate file is an ignored geographic-audit artifact. It is not a released QuodWords index and does not alter the temporary Beacon mapper.
 
+Validate the generated GB permanent-land candidate dataset:
+
+```bash
+~/miniforge3/bin/conda run -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/validate_gb_land.py \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-candidates.geojson
+```
 Run the complete configured island-policy audit against the generated island dataset:
 
 ```bash
