@@ -101,6 +101,18 @@ Validate the generated GB permanent-land candidate dataset:
   python tools/QuodWordsTerritoryGenerator/src/validate_gb_land.py \
   tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-candidates.geojson
 ```
+Generate the provisional GB permanent-land plus 25 NM marine coverage mask:
+
+```bash
+~/miniforge3/bin/conda run --no-capture-output \
+  -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/generate_gb_coverage_mask.py \
+  tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-candidates.geojson \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-plus-25nm-coverage-mask.geojson
+```
+
+The generated mask is an ignored geographic-audit artefact in EPSG:3035. It combines permanent GB land with the configured 46,300 m marine buffer. Rockall remains covered as permanent land but does not independently generate a marine buffer.
 Run the complete configured island-policy audit against the generated island dataset:
 
 ```bash
