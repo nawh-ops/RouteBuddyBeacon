@@ -94,11 +94,13 @@ The following coordinates are therefore catalogue placeholders and must remain `
 
 | ID | Description | Latitude | Longitude | Expected result | Decision required |
 |---|---|---:|---:|---|---|
-| GB-SEA-001 | Near-shore water south of Isle of Wight | 50.540000 | -1.300000 | pendingBoundaryDecision | Confirm inside generated GB coastal mask |
-| GB-SEA-002 | Near-shore water west of Cornwall | 50.070000 | -5.850000 | pendingBoundaryDecision | Confirm inside generated GB coastal mask |
-| GB-SEA-003 | Near-shore water west of Lewis | 58.200000 | -6.700000 | pendingBoundaryDecision | Confirm island buffering |
-| GB-SEA-004 | Near-shore water east of Shetland | 60.150000 | -0.850000 | pendingBoundaryDecision | Confirm northern island buffering |
-| GB-SEA-005 | Near-shore water north of Northern Ireland | 55.250000 | -6.500000 | pendingBoundaryDecision | Confirm Northern Ireland coastal coverage |
+| GB-SEA-001 | Near-shore water south of Isle of Wight | 50.540000 | -1.300000 | includedGB | Confirm inside generated GB coastal mask |
+| GB-SEA-002 | Near-shore water west of Cornwall | 50.070000 | -5.850000 | includedGB | Confirm inside generated GB coastal mask |
+| GB-SEA-003 | Near-shore water west of Lewis | 58.200000 | -6.700000 | includedGB | Confirm island buffering |
+| GB-SEA-004 | Near-shore water east of Shetland | 60.150000 | -0.850000 | includedGB | Confirm northern island buffering |
+| GB-SEA-005 | Near-shore water north of Northern Ireland | 55.250000 | -6.500000 | includedGB | Confirm Northern Ireland coastal coverage |
+
+The five fixed coastal-water fixtures above were verified inside the provisional EPSG:3035 coverage mask generated with the configured 46,300 m marine buffer.
 
 ## 6. Intended outer marine-limit fixtures
 
