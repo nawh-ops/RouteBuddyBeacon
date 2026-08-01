@@ -74,6 +74,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("config", type=Path)
     parser.add_argument("land_dataset", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--foreign-land-dataset",
+        type=Path,
+        default=None,
+        help=(
+            "Optional GeoJSON FeatureCollection containing foreign land "
+            "to subtract from the completed GB coverage mask."
+        ),
+    )
     return parser
 
 
@@ -92,6 +101,21 @@ def main(argv: list[str] | None = None) -> int:
             flush=True,
         )
 
+        foreign_land_dataset = None
+
+        if args.foreign_land_dataset is not None:
+            print("Loading foreign-land dataset.", flush=True)
+            foreign_land_dataset = _load_geojson(
+                args.foreign_land_dataset
+            )
+            foreign_feature_count = len(
+                foreign_land_dataset.get("features", [])
+            )
+            print(
+                f"Loaded {foreign_feature_count} foreign-land features.",
+                flush=True,
+            )
+
         print("Projecting and combining land geometry.", flush=True)
         feature = generate_marine_buffer_geometry(
             land_dataset,
@@ -102,6 +126,7 @@ def main(argv: list[str] | None = None) -> int:
             non_buffer_generating_names=(
                 config.marine.non_buffer_generating_exceptions
             ),
+            foreign_land_dataset=foreign_land_dataset,
             progress=lambda message: print(
                 message,
                 flush=True,

@@ -6,6 +6,9 @@ import json
 import sys
 from pathlib import Path
 
+from pyproj import Transformer
+from shapely.geometry import Point, shape
+
 GENERATOR_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(GENERATOR_ROOT / "src"))
 
@@ -60,6 +63,35 @@ def write_land_dataset(path: Path) -> None:
     )
 
 
+
+def write_foreign_land_dataset(path: Path) -> None:
+    path.write_text(
+        json.dumps({
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "id": "foreign-land",
+                    "properties": {
+                        "name": "Foreign Land",
+                    },
+                    "geometry": {
+                        "type": "MultiPolygon",
+                        "coordinates": square(
+                            -0.985,
+                            50.0,
+                            -0.975,
+                            50.01,
+                        ),
+                    },
+                },
+            ],
+        }),
+        encoding="utf-8",
+    )
+
+
+
 def test_main_generates_coverage_mask(
     tmp_path: Path,
     capsys,
@@ -88,6 +120,48 @@ def test_main_generates_coverage_mask(
     assert result["type"] == "FeatureCollection"
     assert len(result["features"]) == 1
     assert result["features"][0]["geometry"]["type"] == "MultiPolygon"
+
+
+
+def test_main_removes_supplied_foreign_land(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    land_path = tmp_path / "land.geojson"
+    foreign_path = tmp_path / "foreign.geojson"
+    output_path = tmp_path / "coverage.geojson"
+
+    write_land_dataset(land_path)
+    write_foreign_land_dataset(foreign_path)
+
+    exit_code = main([
+        str(GENERATOR_ROOT / "config" / "GB.provisional.yaml"),
+        str(land_path),
+        str(output_path),
+        "--foreign-land-dataset",
+        str(foreign_path),
+    ])
+
+    captured = capsys.readouterr()
+    result = json.loads(output_path.read_text(encoding="utf-8"))
+    geometry = shape(result["features"][0]["geometry"])
+
+    transformer = Transformer.from_crs(
+        "EPSG:4326",
+        "EPSG:3035",
+        always_xy=True,
+    )
+    foreign_x, foreign_y = transformer.transform(
+        -0.98,
+        50.005,
+    )
+
+    assert exit_code == 0
+    assert "Loading foreign-land dataset." in captured.out
+    assert "Loaded 1 foreign-land features." in captured.out
+    assert captured.err == ""
+    assert not geometry.contains(Point(foreign_x, foreign_y))
+
 
 
 def test_main_reports_missing_land_dataset(
