@@ -151,6 +151,38 @@ def _parse_neighbouring_territories(
     return neighbours
 
 
+def _parse_geometry_source(
+    raw: dict[str, Any],
+    *,
+    section: str,
+) -> GeometrySourceConfig:
+    return GeometrySourceConfig(
+        source_type=require_string(
+            _require_value(raw, "type", section),
+            field=f"{section}.type",
+        ),
+        snapshot_date=require_optional_string(
+            _require_value(raw, "snapshotDate", section),
+            field=f"{section}.snapshotDate",
+        ),
+        extract_provider=require_optional_string(
+            _require_value(raw, "extractProvider", section),
+            field=f"{section}.extractProvider",
+        ),
+        download_filename=require_optional_string(
+            _require_value(raw, "downloadFilename", section),
+            field=f"{section}.downloadFilename",
+        ),
+        source_checksum=require_optional_string(
+            _require_value(raw, "sourceChecksum", section),
+            field=f"{section}.sourceChecksum",
+        ),
+        licence=require_string(
+            _require_value(raw, "licence", section),
+            field=f"{section}.licence",
+        ),
+    )
+
 def load_config(path: str | Path) -> TerritoryConfig:
     config_path = Path(path)
 
@@ -206,55 +238,9 @@ def load_config(path: str | Path) -> TerritoryConfig:
             field="resourceType",
         )
 
-        geometry_source = GeometrySourceConfig(
-            source_type=require_string(
-                _require_value(
-                    geometry_raw,
-                    "type",
-                    "geometrySource",
-                ),
-                field="geometrySource.type",
-            ),
-            snapshot_date=require_optional_string(
-                _require_value(
-                    geometry_raw,
-                    "snapshotDate",
-                    "geometrySource",
-                ),
-                field="geometrySource.snapshotDate",
-            ),
-            extract_provider=require_optional_string(
-                _require_value(
-                    geometry_raw,
-                    "extractProvider",
-                    "geometrySource",
-                ),
-                field="geometrySource.extractProvider",
-            ),
-            download_filename=require_optional_string(
-                _require_value(
-                    geometry_raw,
-                    "downloadFilename",
-                    "geometrySource",
-                ),
-                field="geometrySource.downloadFilename",
-            ),
-            source_checksum=require_optional_string(
-                _require_value(
-                    geometry_raw,
-                    "sourceChecksum",
-                    "geometrySource",
-                ),
-                field="geometrySource.sourceChecksum",
-            ),
-            licence=require_string(
-                _require_value(
-                    geometry_raw,
-                    "licence",
-                    "geometrySource",
-                ),
-                field="geometrySource.licence",
-            ),
+        geometry_source = _parse_geometry_source(
+            geometry_raw,
+            section="geometrySource",
         )
 
         coverage = CoverageConfig(
