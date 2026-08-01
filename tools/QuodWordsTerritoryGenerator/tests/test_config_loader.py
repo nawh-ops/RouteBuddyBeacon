@@ -40,13 +40,37 @@ def test_loads_provisional_gb_config() -> None:
 
     assert len(config.foreign_boundary_sources) == 2
 
-    for source in config.foreign_boundary_sources:
-        assert source.source_type == "OpenStreetMap"
-        assert source.snapshot_date is None
-        assert source.extract_provider == "Geofabrik"
-        assert source.download_filename is None
-        assert source.source_checksum is None
-        assert source.licence == "ODbL-1.0"
+    france_source, channel_islands_source = (
+        config.foreign_boundary_sources
+    )
+
+    assert france_source.source_type == "OpenStreetMap"
+    assert france_source.snapshot_date == "2026-07-27"
+    assert france_source.extract_provider == "Geofabrik"
+    assert (
+        france_source.download_filename
+        == "france-260727.osm.pbf"
+    )
+    assert (
+        france_source.source_checksum
+        == "sha256:feef5429cc6b2a6f74e6bc733c57034d"
+        "45e10eb4bcb175171e1a6b1ba9e78e7a"
+    )
+    assert france_source.licence == "ODbL-1.0"
+
+    assert channel_islands_source.source_type == "OpenStreetMap"
+    assert channel_islands_source.snapshot_date == "2026-07-27"
+    assert channel_islands_source.extract_provider == "Geofabrik"
+    assert (
+        channel_islands_source.download_filename
+        == "guernsey-jersey-260727.osm.pbf"
+    )
+    assert (
+        channel_islands_source.source_checksum
+        == "sha256:426a0d326fe8d230deb794548d09c1b04"
+        "9057aaa6054bd0bb3943a2d3d3168bd"
+    )
+    assert channel_islands_source.licence == "ODbL-1.0"
 
     assert config.coverage.include_england is True
     assert config.coverage.include_scotland is True

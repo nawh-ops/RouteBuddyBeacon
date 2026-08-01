@@ -12,16 +12,16 @@ geometrySource:
 
 foreignBoundarySources:
   - type: OpenStreetMap
-    snapshotDate: null
+    snapshotDate: "2026-07-27"
     extractProvider: Geofabrik
-    downloadFilename: null
-    sourceChecksum: null
+    downloadFilename: france-260727.osm.pbf
+    sourceChecksum: sha256:feef5429cc6b2a6f74e6bc733c57034d45e10eb4bcb175171e1a6b1ba9e78e7a
     licence: ODbL-1.0
   - type: OpenStreetMap
-    snapshotDate: null
+    snapshotDate: "2026-07-27"
     extractProvider: Geofabrik
-    downloadFilename: null
-    sourceChecksum: null
+    downloadFilename: guernsey-jersey-260727.osm.pbf
+    sourceChecksum: sha256:426a0d326fe8d230deb794548d09c1b049057aaa6054bd0bb3943a2d3d3168bd
     licence: ODbL-1.0
 
 grid:
