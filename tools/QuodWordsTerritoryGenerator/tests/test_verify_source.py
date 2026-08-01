@@ -22,14 +22,19 @@ def write_frozen_config(
     content: bytes,
 ) -> Path:
     raw = yaml.safe_load(GB_CONFIG_PATH.read_text(encoding="utf-8"))
-    raw["geometrySource"].update({
+    source_metadata = {
         "snapshotDate": "2026-07-29",
         "extractProvider": "Test Provider",
         "downloadFilename": filename,
         "sourceChecksum": (
             "sha256:" + hashlib.sha256(content).hexdigest()
         ),
-    })
+    }
+
+    raw["geometrySource"].update(source_metadata)
+
+    for source in raw["foreignBoundarySources"]:
+        source.update(source_metadata)
 
     config_path = tmp_path / "GB.frozen.yaml"
     config_path.write_text(
@@ -64,8 +69,11 @@ def test_matching_frozen_source_is_verified(
     captured = capsys.readouterr()
 
     assert exit_code == 0
-    assert "Geographic source file verified:" in captured.out
-    assert filename in captured.out
+    assert (
+        captured.out.count("Geographic source file verified:")
+        == 3
+    )
+    assert captured.out.count(filename) == 3
     assert captured.err == ""
 
 

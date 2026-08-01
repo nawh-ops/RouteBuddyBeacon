@@ -41,21 +41,31 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         config = load_config(args.config)
-        source = validate_frozen_geometry_source(
-            config.geometry_source
+        sources = (
+            config.geometry_source,
+            *config.foreign_boundary_sources,
         )
 
-        assert source.download_filename is not None
-        assert source.source_checksum is not None
+        verified_paths: list[Path] = []
 
-        source_path = (
-            args.input_directory / source.download_filename
-        )
+        for configured_source in sources:
+            source = validate_frozen_geometry_source(
+                configured_source
+            )
 
-        verified_path = verify_source_file(
-            source_path,
-            source.source_checksum,
-        )
+            assert source.download_filename is not None
+            assert source.source_checksum is not None
+
+            source_path = (
+                args.input_directory / source.download_filename
+            )
+
+            verified_paths.append(
+                verify_source_file(
+                    source_path,
+                    source.source_checksum,
+                )
+            )
     except (
         ConfigError,
         GeometrySourceManifestError,
@@ -64,7 +74,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Source verification error: {exc}", file=sys.stderr)
         return 1
 
-    print(f"Geographic source file verified: {verified_path}")
+    for verified_path in verified_paths:
+        print(f"Geographic source file verified: {verified_path}")
+
     return 0
 
 
