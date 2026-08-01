@@ -72,7 +72,7 @@ Validate the territory configuration and require frozen source metadata:
   --require-frozen-source
 ```
 
-Verify the actual frozen geographic source file against the configured filename and SHA-256 checksum:
+Verify all actual frozen geographic source files against their configured filenames and SHA-256 checksums:
 
 ```bash
 ~/miniforge3/bin/conda run -n quodwords-territory \
