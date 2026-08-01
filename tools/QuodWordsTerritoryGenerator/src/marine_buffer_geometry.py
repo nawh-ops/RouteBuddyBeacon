@@ -152,6 +152,7 @@ def generate_marine_buffer_geometry(
     buffer_distance_metres: int,
     projection: str,
     non_buffer_generating_names: Sequence[str] = (),
+    foreign_land_dataset: Mapping[str, Any] | None = None,
     progress: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     """Project eligible land, union it and generate its marine buffer."""
@@ -233,6 +234,60 @@ def generate_marine_buffer_geometry(
             "No buffer-generating land features remain."
         )
 
+    foreign_geometries: list[BaseGeometry] = []
+
+    if foreign_land_dataset is not None:
+        if foreign_land_dataset.get("type") != "FeatureCollection":
+            raise MarineBufferGeometryError(
+                "Foreign-land dataset must be a GeoJSON "
+                "FeatureCollection."
+            )
+
+        foreign_features = foreign_land_dataset.get("features")
+        if not isinstance(foreign_features, list):
+            raise MarineBufferGeometryError(
+                "Foreign-land dataset must contain a features list."
+            )
+
+        for index, feature in enumerate(foreign_features):
+            if not isinstance(feature, Mapping):
+                raise MarineBufferGeometryError(
+                    f"Foreign-land feature {index} must be an object."
+                )
+
+            geometry_data = feature.get("geometry")
+            if not isinstance(geometry_data, Mapping):
+                raise MarineBufferGeometryError(
+                    f"Foreign-land feature {index} must contain geometry."
+                )
+
+            try:
+                geometry = shape(geometry_data)
+            except (TypeError, ValueError) as exc:
+                raise MarineBufferGeometryError(
+                    f"Foreign-land feature {index} contains invalid "
+                    f"GeoJSON: {exc}"
+                ) from exc
+
+            if geometry.is_empty:
+                raise MarineBufferGeometryError(
+                    f"Foreign-land feature {index} geometry must not "
+                    "be empty."
+                )
+
+            if not geometry.is_valid:
+                raise MarineBufferGeometryError(
+                    f"Foreign-land feature {index} geometry must be valid."
+                )
+
+            if not isinstance(geometry, (Polygon, MultiPolygon)):
+                raise MarineBufferGeometryError(
+                    f"Foreign-land feature {index} geometry must be "
+                    "polygonal."
+                )
+
+            foreign_geometries.append(geometry)
+
     try:
         transformer = Transformer.from_crs(
             "EPSG:4326",
@@ -251,6 +306,10 @@ def generate_marine_buffer_geometry(
     projected_excluded_land = [
         transform(transformer.transform, geometry)
         for geometry in excluded_geometries
+    ]
+    projected_foreign_land = [
+        transform(transformer.transform, geometry)
+        for geometry in foreign_geometries
     ]
 
     if progress is not None:
@@ -281,6 +340,17 @@ def generate_marine_buffer_geometry(
         ])
     else:
         coverage_mask = buffered_eligible_land
+
+    if projected_foreign_land:
+        if progress is not None:
+            progress("Removing configured foreign land.")
+
+        foreign_land = _batched_union(
+            projected_foreign_land,
+            progress=progress,
+        )
+        coverage_mask = coverage_mask.difference(foreign_land)
+
     polygonal_buffer = _polygonal_geometry(coverage_mask)
 
     if polygonal_buffer.is_empty:
@@ -299,6 +369,7 @@ def generate_marine_buffer_geometry(
             "projection": projection,
             "bufferDistanceMetres": buffer_distance_metres,
             "eligibleLandFeatureCount": len(eligible_geometries),
+            "foreignLandFeatureCount": len(foreign_geometries),
             "excludedFeatureNames": sorted(exceptions),
         },
         "geometry": mapping(polygonal_buffer),

@@ -223,6 +223,48 @@ def test_exception_land_is_retained_but_does_not_generate_buffer() -> None:
     assert not geometry.contains(Point(nearby_x, nearby_y))
 
 
+
+def test_foreign_land_is_removed_from_completed_coverage_mask() -> None:
+    result = generate_marine_buffer_geometry(
+        dataset([
+            feature(
+                "gb-land",
+                "GB Land",
+                square(-1.0, 50.0, -0.99, 50.01),
+            ),
+        ]),
+        buffer_distance_metres=46_300,
+        projection="EPSG:3035",
+        foreign_land_dataset=dataset([
+            feature(
+                "foreign-land",
+                "Foreign Land",
+                square(-0.985, 50.0, -0.975, 50.01),
+            ),
+        ]),
+    )
+
+    geometry = shape(result["geometry"])
+    transformer = Transformer.from_crs(
+        "EPSG:4326",
+        "EPSG:3035",
+        always_xy=True,
+    )
+
+    foreign_x, foreign_y = transformer.transform(
+        -0.98,
+        50.005,
+    )
+    retained_sea_x, retained_sea_y = transformer.transform(
+        -0.965,
+        50.005,
+    )
+
+    assert not geometry.contains(Point(foreign_x, foreign_y))
+    assert geometry.contains(Point(retained_sea_x, retained_sea_y))
+
+
+
 def test_batched_union_combines_multiple_geometries() -> None:
     geometries = [
         shape({
