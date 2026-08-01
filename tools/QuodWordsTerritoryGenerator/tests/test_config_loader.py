@@ -38,6 +38,19 @@ def test_loads_provisional_gb_config() -> None:
     )
     assert config.geometry_source.licence == "ODbL-1.0"
 
+    assert (
+        config.foreign_boundary_source.source_type
+        == "OpenStreetMap"
+    )
+    assert config.foreign_boundary_source.snapshot_date is None
+    assert (
+        config.foreign_boundary_source.extract_provider
+        == "Geofabrik"
+    )
+    assert config.foreign_boundary_source.download_filename is None
+    assert config.foreign_boundary_source.source_checksum is None
+    assert config.foreign_boundary_source.licence == "ODbL-1.0"
+
     assert config.coverage.include_england is True
     assert config.coverage.include_scotland is True
     assert config.coverage.include_wales is True

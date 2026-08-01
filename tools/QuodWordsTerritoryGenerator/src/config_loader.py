@@ -86,6 +86,7 @@ class TerritoryConfig:
     status: str
     resource_type: str
     geometry_source: GeometrySourceConfig
+    foreign_boundary_source: GeometrySourceConfig
     coverage: CoverageConfig
     required_island_tests: RequiredIslandTestsConfig
     public_grammar: PublicGrammarConfig
@@ -203,6 +204,10 @@ def load_config(path: str | Path) -> TerritoryConfig:
             _require_value(root, "geometrySource", "root"),
             "geometrySource",
         )
+        foreign_boundary_raw = _require_mapping(
+            _require_value(root, "foreignBoundarySource", "root"),
+            "foreignBoundarySource",
+        )
         coverage_raw = _require_mapping(
             _require_value(root, "coverage", "root"),
             "coverage",
@@ -241,6 +246,10 @@ def load_config(path: str | Path) -> TerritoryConfig:
         geometry_source = _parse_geometry_source(
             geometry_raw,
             section="geometrySource",
+        )
+        foreign_boundary_source = _parse_geometry_source(
+            foreign_boundary_raw,
+            section="foreignBoundarySource",
         )
 
         coverage = CoverageConfig(
@@ -507,6 +516,7 @@ def load_config(path: str | Path) -> TerritoryConfig:
         status=status,
         resource_type=resource_type,
         geometry_source=geometry_source,
+        foreign_boundary_source=foreign_boundary_source,
         coverage=coverage,
         required_island_tests=RequiredIslandTestsConfig(
             buffer_generating=buffer_generating,
