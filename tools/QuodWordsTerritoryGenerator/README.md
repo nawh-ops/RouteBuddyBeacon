@@ -101,6 +101,17 @@ Validate the generated GB permanent-land candidate dataset:
   python tools/QuodWordsTerritoryGenerator/src/validate_gb_land.py \
   tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-candidates.geojson
 ```
+
+After generating the GB coverage mask, validate the key real-world geographic checks:
+
+```bash
+~/miniforge3/bin/conda run --no-capture-output \
+  -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/validate_gb_coverage_geography.py \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-coverage-mask.geojson
+```
+
+The validator confirms that Letterkenny and Calais are excluded while retained marine coverage remains present in the English Channel and Irish Sea near Anglesey.
 Generate the provisional GB permanent-land plus 25 NM marine coverage mask:
 
 ```bash
