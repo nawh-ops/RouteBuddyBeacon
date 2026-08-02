@@ -102,6 +102,20 @@ Validate the generated GB permanent-land candidate dataset:
   tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-candidates.geojson
 ```
 
+Build the five-territory foreign-land dataset from the exported boundary GeoJSON files:
+
+```bash
+~/miniforge3/bin/conda run --no-capture-output \
+  -n quodwords-territory \
+  python tools/QuodWordsTerritoryGenerator/src/build_gb_foreign_land.py \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/metropolitan-france-boundary.geojson \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/channel-islands-boundaries-complete.geojson \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/ireland-isle-of-man-boundaries.geojson \
+  --output tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-foreign-land.geojson
+```
+
+The builder requires and writes exactly five neighbouring territories in deterministic order: FR, GG, JE, IE and IM.
+
 After generating the GB coverage mask, validate the key real-world geographic checks:
 
 ```bash
