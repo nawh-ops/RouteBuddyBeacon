@@ -134,7 +134,9 @@ Generate the provisional GB permanent-land plus 25 NM marine coverage mask:
   python tools/QuodWordsTerritoryGenerator/src/generate_gb_coverage_mask.py \
   tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml \
   tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-candidates.geojson \
-  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-plus-25nm-coverage-mask.geojson
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-land-plus-25nm-coverage-mask.geojson \
+  --foreign-land-dataset \
+  tools/QuodWordsTerritoryGenerator/output/geographic-audit/gb-foreign-land.geojson
 ```
 
 The generated mask is an ignored geographic-audit artefact in EPSG:3035. It combines permanent GB land with the configured 46,300 m marine buffer. Rockall remains covered as permanent land but does not independently generate a marine buffer.
