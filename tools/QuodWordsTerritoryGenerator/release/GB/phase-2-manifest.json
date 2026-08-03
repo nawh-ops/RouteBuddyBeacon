@@ -1,0 +1,51 @@
+{
+  "acceptance": {
+    "fullAutomatedTestCount": 204,
+    "fullAutomatedTestResult": "passed",
+    "permanentGeographicChecks": 25,
+    "result": "passed",
+    "validator": "tools/QuodWordsTerritoryGenerator/src/validate_gb_coverage_geography.py"
+  },
+  "approvedAt": "2026-08-03T08:48:07+01:00",
+  "generatorConfiguration": {
+    "path": "tools/QuodWordsTerritoryGenerator/config/GB.provisional.yaml",
+    "sha256": "221de57568f50e8255248ff55c56eb142c72507cf68ab6e18be53482385cb577"
+  },
+  "phase": 2,
+  "policySummary": {
+    "baseCellSizeMetres": 32,
+    "boundaryCentreCountsAsCovered": true,
+    "bufferEligibilityPolicy": "allQualifyingPermanentLand",
+    "excludeForeignLand": true,
+    "inclusionRule": "centreCovered",
+    "marineBufferMetres": 46300,
+    "marineBufferNauticalMiles": 25,
+    "neighbouringTerritories": [
+      "IE",
+      "IM",
+      "JE",
+      "GG",
+      "FR"
+    ],
+    "nonBufferGeneratingExceptions": [
+      "Rockall"
+    ]
+  },
+  "releaseMask": {
+    "bufferDistanceMetres": 46300,
+    "eligibleLandFeatureCount": 14993,
+    "excludedFeatureNames": [
+      "Rockall"
+    ],
+    "foreignLandFeatureCount": 5,
+    "geometryType": "MultiPolygon",
+    "path": "tools/QuodWordsTerritoryGenerator/release/GB/gb-coverage-mask.geojson",
+    "projection": "EPSG:3035",
+    "sha256": "d14f9e8e2c013f8ae4b89fff375bb5036c60665258bdbbb23e337f287a3d1b86",
+    "sizeBytes": 849496
+  },
+  "schemaVersion": 1,
+  "sourceCommit": "96389a7339592ae25bcff4302649b3f35595b9f9",
+  "status": "acceptedCandidateGeometry",
+  "territoryCode": "GB"
+}
