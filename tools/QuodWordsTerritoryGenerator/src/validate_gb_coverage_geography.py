@@ -18,10 +18,42 @@ class CoverageGeographyValidationError(ValueError):
 
 
 CHECKS = (
-    ("Letterkenny", -7.734, 54.955, False),
-    ("Calais", 1.8587, 50.9513, False),
-    ("English Channel sea", -0.50, 50.40, True),
-    ("Irish Sea near Anglesey", -4.40, 53.35, True),
+    # Principal GB and Northern Ireland land.
+    ("London", -0.1276, 51.5072, True),
+    ("Edinburgh", -3.1883, 55.9533, True),
+    ("Cardiff", -3.1791, 51.4816, True),
+    ("Belfast", -5.9301, 54.5973, True),
+
+    # Representative permanent islands.
+    ("Lerwick, Shetland", -1.1494, 60.1550, True),
+    ("Kirkwall, Orkney", -2.9590, 58.9847, True),
+    ("Stornoway, Lewis", -6.2603, 58.2093, True),
+    ("Hugh Town, Isles of Scilly", -6.3170, 49.9140, True),
+    ("Foula", -2.0530, 60.1370, True),
+    ("Fair Isle", -1.6290, 59.5360, True),
+
+    # Retained marine coverage.
+    ("English Channel sea", -0.5000, 50.4000, True),
+    ("Irish Sea near Anglesey", -4.4000, 53.3500, True),
+    ("North Sea east of Aberdeen", -1.5000, 57.1000, True),
+    ("The Minch", -6.0000, 57.8000, True),
+
+    # Northern Ireland and Ireland separation.
+    ("Newry, Northern Ireland", -6.3370, 54.1750, True),
+    ("Dundalk, Ireland", -6.4050, 54.0000, False),
+    ("Letterkenny, Ireland", -7.7340, 54.9550, False),
+    ("Dublin, Ireland", -6.2603, 53.3498, False),
+
+    # Other neighbouring territories.
+    ("Douglas, Isle of Man", -4.4817, 54.1523, False),
+    ("St Helier, Jersey", -2.1312, 49.1868, False),
+    ("St Peter Port, Guernsey", -2.5369, 49.4550, False),
+    ("Calais, France", 1.8587, 50.9513, False),
+    ("Cherbourg, France", -1.6220, 49.6330, False),
+
+    # Clearly beyond the intended marine reach.
+    ("Atlantic west of Ireland", -15.0000, 55.0000, False),
+    ("Bay of Biscay", -5.0000, 47.0000, False),
 )
 
 

@@ -22,6 +22,9 @@ from validate_gb_coverage_geography import (  # noqa: E402
 )
 
 
+from validate_gb_coverage_geography import CHECKS  # noqa: E402
+
+
 def projected_point(longitude: float, latitude: float) -> Point:
     transformer = Transformer.from_crs(
         "EPSG:4326",
@@ -53,8 +56,9 @@ def write_mask(path: Path, geometry) -> None:
 def valid_test_geometry():
     return unary_union(
         [
-            projected_point(-0.50, 50.40).buffer(1_000),
-            projected_point(-4.40, 53.35).buffer(1_000),
+            projected_point(longitude, latitude).buffer(1_000)
+            for _, longitude, latitude, expected_covered in CHECKS
+            if expected_covered
         ]
     )
 
@@ -69,10 +73,11 @@ def test_valid_real_world_geography_is_accepted(
     results = validate_geography(geometry)
 
     assert results == [
-        "Letterkenny: covered=False; expected=False",
-        "Calais: covered=False; expected=False",
-        "English Channel sea: covered=True; expected=True",
-        "Irish Sea near Anglesey: covered=True; expected=True",
+        (
+            f"{name}: covered={expected_covered}; "
+            f"expected={expected_covered}"
+        )
+        for name, _, _, expected_covered in CHECKS
     ]
 
 
@@ -86,7 +91,7 @@ def test_incorrect_foreign_land_coverage_is_rejected() -> None:
 
     with pytest.raises(
         CoverageGeographyValidationError,
-        match="Letterkenny expected covered=False",
+        match="Letterkenny, Ireland expected covered=False",
     ):
         validate_geography(geometry)
 
