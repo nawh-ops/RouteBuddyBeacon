@@ -109,3 +109,20 @@ The accepted GB coverage mask has passed the representative Phase 3
 visual audit.
 
 No geometry alteration is required as a result of the visual inspection.
+
+## Candidate island-area thresholds
+
+The configuration retains the candidate island-area threshold values:
+
+`0, 1, 5, 10, 25, 50 and 100 hectares`.
+
+These values are audit-only experimental metadata used for geographic
+comparison. They do not determine production buffer eligibility and are
+not used by the production coverage-geometry generator.
+
+They are intentionally retained unchanged because they form part of the
+configuration whose checksum is recorded in the Phase 2 release
+manifest. Removing or renaming them after acceptance would unnecessarily
+alter that provenance.
+
+No configuration or geometry change is required.
