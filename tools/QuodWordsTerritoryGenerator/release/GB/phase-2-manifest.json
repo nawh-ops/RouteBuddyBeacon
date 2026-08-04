@@ -1,6 +1,6 @@
 {
   "acceptance": {
-    "fullAutomatedTestCount": 216,
+    "fullAutomatedTestCount": 223,
     "fullAutomatedTestResult": "passed",
     "permanentGeographicChecks": 25,
     "result": "passed",
@@ -52,5 +52,22 @@
   "schemaVersion": 1,
   "sourceCommit": "76e46ecfb72038c1b349151d4f8ee11f7b8e6bb7",
   "status": "acceptedCandidateGeometry",
-  "territoryCode": "GB"
+  "territoryCode": "GB",
+  "territoryResource": {
+    "path": "tools/QuodWordsTerritoryGenerator/release/GB/GB.qwtr",
+    "schemaVersion": 1,
+    "format": "QWTRSPAN",
+    "projection": "EPSG:3035",
+    "originX": 0,
+    "originY": 0,
+    "cellSizeMetres": 32,
+    "rowSpanCount": 53362,
+    "includedCellCount": 433083140,
+    "maximumCodeCount": 439400000,
+    "remainingCapacity": 6316860,
+    "sizeBytes": 640408,
+    "sha256": "2c1d6975258430574873180d795663894fe659d9f9fe03386e352b60a929488a",
+    "generatorCommit": "fc5ee0fc97ec891dab6d719d59da114c7b4bbaec",
+    "immutable": true
+  }
 }

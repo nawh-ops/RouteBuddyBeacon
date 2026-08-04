@@ -67,7 +67,7 @@ The acceptance validator is:
 At approval:
 
 - permanent geographic checks: 25 passed;
-- full automated suite: 216 passed;
+- full automated suite: 223 passed;
 - geometry was valid and non-empty;
 - candidate and tracked release checksums were identical.
 
@@ -88,3 +88,18 @@ that resource into RouteBuddy Beacon.
 - Remaining capacity: **6,316,860 codes**.
 - Capacity used: **98.5624%**.
 - The released GB cell and index mapping is immutable. Later source-data or policy changes must not renumber the original mapping.
+
+## Frozen GB territory resource
+
+- File: `GB.qwtr`.
+- Binary format: `QWTRSPAN`, schema version 1.
+- Projection: EPSG:3035.
+- Grid origin: `(0, 0)`.
+- Cell size: 32 metres.
+- Row spans: 53,362.
+- Included cells: 433,083,140.
+- Maximum public-code capacity: 439,400,000.
+- Remaining capacity: 6,316,860.
+- File size: 640,408 bytes.
+- SHA-256: `2c1d6975258430574873180d795663894fe659d9f9fe03386e352b60a929488a`.
+- The row-span ordering and resulting national indices are immutable.
