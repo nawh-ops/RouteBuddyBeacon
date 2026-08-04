@@ -73,6 +73,7 @@ class GridConfig:
 
 @dataclass(frozen=True)
 class MarineConfig:
+    public_guaranteed_distance_nautical_miles: int
     buffer_distance_nautical_miles: int
     buffer_distance_metres: int
     buffer_eligibility_policy: str
@@ -365,6 +366,16 @@ def load_config(path: str | Path) -> TerritoryConfig:
             field="grid.boundaryCentreCountsAsCovered",
         )
 
+        public_guaranteed_nm = require_integer(
+        _require_value(
+            marine_raw,
+            "publicGuaranteedDistanceNauticalMiles",
+            "marine",
+        ),
+        field="marine.publicGuaranteedDistanceNauticalMiles",
+        minimum=1,
+        )
+
         buffer_nm = require_integer(
             _require_value(
                 marine_raw,
@@ -382,6 +393,12 @@ def load_config(path: str | Path) -> TerritoryConfig:
             ),
             field="marine.bufferDistanceMetres",
             minimum=1,
+        )
+
+        if public_guaranteed_nm > buffer_nm:
+            raise ConfigValueError(
+            "marine.publicGuaranteedDistanceNauticalMiles must not exceed "
+            "marine.bufferDistanceNauticalMiles."
         )
 
         expected_metres = buffer_nm * 1852
@@ -556,6 +573,7 @@ def load_config(path: str | Path) -> TerritoryConfig:
             ),
         ),
         marine=MarineConfig(
+            public_guaranteed_distance_nautical_miles=public_guaranteed_nm,
             buffer_distance_nautical_miles=buffer_nm,
             buffer_distance_metres=buffer_metres,
             buffer_eligibility_policy=buffer_eligibility_policy,

@@ -54,7 +54,11 @@ def format_summary(config: TerritoryConfig) -> str:
                 f"origin ({config.grid.origin_x}, {config.grid.origin_y})"
             ),
             (
-                "Marine buffer: "
+                "Public marine guarantee: "
+                f"{config.marine.public_guaranteed_distance_nautical_miles} NM"
+            ),
+            (
+                "Internal marine generation buffer: "
                 f"{config.marine.buffer_distance_nautical_miles} NM "
                 f"({config.marine.buffer_distance_metres} m)"
             ),

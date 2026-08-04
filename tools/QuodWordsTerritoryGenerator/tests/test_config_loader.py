@@ -87,8 +87,9 @@ def test_loads_provisional_gb_config() -> None:
     assert config.grid.inclusion_rule == "centreCovered"
     assert config.grid.boundary_centre_counts_as_covered is True
 
-    assert config.marine.buffer_distance_nautical_miles == 25
-    assert config.marine.buffer_distance_metres == 46300
+    assert config.marine.public_guaranteed_distance_nautical_miles == 15
+    assert config.marine.buffer_distance_nautical_miles == 17
+    assert config.marine.buffer_distance_metres == 31484
     assert config.marine.candidate_island_thresholds_hectares == (
         0,
         1,
@@ -505,3 +506,68 @@ def test_non_buffer_exception_must_be_a_string(
     ):
         load_config(config_path)
 
+
+
+def test_public_guarantee_must_not_exceed_generation_buffer(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(
+        GB_CONFIG_PATH.read_text(encoding="utf-8")
+    )
+    raw["marine"]["publicGuaranteedDistanceNauticalMiles"] = 18
+
+    config_path = tmp_path / "invalid-public-guarantee.yaml"
+    config_path.write_text(
+        yaml.safe_dump(raw),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ConfigError,
+        match=(
+            "publicGuaranteedDistanceNauticalMiles must not exceed "
+            "marine.bufferDistanceNauticalMiles"
+        ),
+    ):
+        load_config(config_path)
+
+
+def test_public_guarantee_must_be_greater_than_zero(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(
+        GB_CONFIG_PATH.read_text(encoding="utf-8")
+    )
+    raw["marine"]["publicGuaranteedDistanceNauticalMiles"] = 0
+
+    config_path = tmp_path / "zero-public-guarantee.yaml"
+    config_path.write_text(
+        yaml.safe_dump(raw),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ConfigError,
+        match="publicGuaranteedDistanceNauticalMiles must be greater than or equal to 1",
+    ):
+        load_config(config_path)
+
+
+def test_public_guarantee_may_equal_generation_buffer(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(
+        GB_CONFIG_PATH.read_text(encoding="utf-8")
+    )
+    raw["marine"]["publicGuaranteedDistanceNauticalMiles"] = 17
+
+    config_path = tmp_path / "equal-public-guarantee.yaml"
+    config_path.write_text(
+        yaml.safe_dump(raw),
+        encoding="utf-8",
+    )
+
+    config = load_config(config_path)
+
+    assert config.marine.public_guaranteed_distance_nautical_miles == 17
+    assert config.marine.buffer_distance_nautical_miles == 17

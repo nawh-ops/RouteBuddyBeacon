@@ -23,7 +23,8 @@ def test_format_summary_contains_key_gb_settings() -> None:
     assert "Territory: GB" in summary
     assert "Projection: EPSG:3035" in summary
     assert "Grid: 32 m cells, origin (0, 0)" in summary
-    assert "Marine buffer: 25 NM (46300 m)" in summary
+    assert "Public marine guarantee: 15 NM" in summary
+    assert "Internal marine generation buffer: 17 NM (31484 m)" in summary
     assert (
         "Marine eligibility: allQualifyingPermanentLand"
         in summary
