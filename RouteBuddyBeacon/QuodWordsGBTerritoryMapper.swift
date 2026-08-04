@@ -4,6 +4,7 @@ import Foundation
 enum QuodWordsGBTerritoryMapperError: Error, Equatable {
     case unsupportedProjection(UInt32)
     case invalidCellSize(UInt32)
+    case nationalIndexNotRepresentable(UInt64)
 }
 
 struct QuodWordsGBTerritoryResult: Equatable {
@@ -86,6 +87,49 @@ struct QuodWordsGBTerritoryMapper {
         for coordinate: CLLocationCoordinate2D
     ) throws -> UInt64 {
         try map(coordinate).nationalIndex
+    }
+
+    func quodWordsCode(
+        for coordinate: CLLocationCoordinate2D
+    ) throws -> QuodWordsCode {
+        let territoryResult = try map(coordinate)
+
+        guard
+            let codeIndex = Int(
+                exactly: territoryResult.nationalIndex
+            )
+        else {
+            throw QuodWordsGBTerritoryMapperError
+                .nationalIndexNotRepresentable(
+                    territoryResult.nationalIndex
+                )
+        }
+
+        let nationalCode =
+            try QuodWords.nationalCellCode(
+                from: codeIndex
+            )
+
+        return QuodWordsCode(
+            territory: .gb,
+            nationalCellCode: nationalCode
+        )
+    }
+
+    func nationalCode(
+        for coordinate: CLLocationCoordinate2D
+    ) throws -> String {
+        try quodWordsCode(
+            for: coordinate
+        ).nationalCellCode
+    }
+
+    func formalCode(
+        for coordinate: CLLocationCoordinate2D
+    ) throws -> String {
+        try quodWordsCode(
+            for: coordinate
+        ).formalCode
     }
 
     func gridCell(
