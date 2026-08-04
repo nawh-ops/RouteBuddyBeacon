@@ -86,6 +86,9 @@
 			dependencies = (
 				D604E32130125E0100197043 /* PBXTargetDependency */,
 			);
+			fileSystemSynchronizedGroups = (
+				D604E30E3012566A00197043 /* RouteBuddyBeaconTests */,
+			);
 			name = RouteBuddyBeaconTests;
 			packageProductDependencies = (
 			);
