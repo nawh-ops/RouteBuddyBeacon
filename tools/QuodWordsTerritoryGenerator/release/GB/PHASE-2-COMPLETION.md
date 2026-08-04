@@ -35,7 +35,7 @@ Its machine-readable provenance and acceptance record is:
 - Great Britain and Northern Ireland are included.
 - Qualifying permanent islands are included.
 - Inland water is included.
-- The marine buffer is 25 nautical miles / 46,300 metres.
+- The internal marine generation buffer is 17 nautical miles / 31,484 metres.
 - All qualifying permanent land generates marine coverage except
   configured exceptions.
 - Rockall remains covered as permanent land but does not independently
@@ -67,7 +67,7 @@ The acceptance validator is:
 At approval:
 
 - permanent geographic checks: 25 passed;
-- full automated suite: 204 passed;
+- full automated suite: 216 passed;
 - geometry was valid and non-empty;
 - candidate and tracked release checksums were identical.
 
@@ -78,3 +78,13 @@ Phase 2 approves the geographic coverage shape only.
 The next substantial stage is to convert the approved geometry into the
 release-ready 32 metre QuodWords GB cell/index resource and then integrate
 that resource into RouteBuddy Beacon.
+
+## Final marine coverage and capacity policy
+
+- Public marine guarantee: **15 nautical miles** from qualifying British land and islands.
+- Internal marine generation buffer: **17 nautical miles / 31,484 metres**.
+- Included 32 metre cells: **433,083,140**.
+- Maximum public-code capacity: **439,400,000**.
+- Remaining capacity: **6,316,860 codes**.
+- Capacity used: **98.5624%**.
+- The released GB cell and index mapping is immutable. Later source-data or policy changes must not renumber the original mapping.
