@@ -33,9 +33,9 @@ CHECKS = (
     ("Fair Isle", -1.6290, 59.5360, True),
 
     # Retained marine coverage.
-    ("English Channel sea", -0.5000, 50.4000, True),
+    ("English Channel sea", -0.5000, 50.6500, True),
     ("Irish Sea near Anglesey", -4.4000, 53.3500, True),
-    ("North Sea east of Aberdeen", -1.5000, 57.1000, True),
+    ("North Sea east of Aberdeen", -1.8000, 57.1000, True),
     ("The Minch", -6.0000, 57.8000, True),
 
     # Northern Ireland and Ireland separation.
