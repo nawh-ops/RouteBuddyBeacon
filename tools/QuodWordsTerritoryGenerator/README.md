@@ -181,3 +181,38 @@ The generator is intended to support future territories through configuration of
 The 32 m territory-base mapping is permanent once publicly released.
 
 Future finer-resolution products must be separate, aligned refinement resources and must not renumber or replace the released 32 m territory mapping.
+
+## Phase 7 Beacon mapper substitution checkpoint
+
+Beacon's production QuodWords encoding path now uses the permanent GB territory mapper:
+
+```text
+GPS
+→ EPSG:3035
+→ 32 m territory cell
+→ immutable national index
+→ LLLDDDL
+→ GB-LLLDDDL
+```
+
+`QuodWordsEncoder.swift` now contains only permanent production encoding.
+
+The former 30 m beta mapper has been removed from the production encoder. Its decoding logic is retained separately in `LegacyQuodWordsDecoder.swift` solely for compatibility with previously issued beta codes.
+
+`QuodWordsResolver.swift` resolves inputs in this order:
+
+1. permanent national or formal GB QuodWords code;
+2. legacy formal beta code;
+3. legacy local beta code near a reference coordinate;
+4. latitude and longitude input.
+
+Verification completed on 5 August 2026:
+
+- full Swift test suite passed;
+- six QuodWords resolver tests passed;
+- Python territory-generator suite: 223 passed;
+- simulator round trip passed for `IPA151I`;
+- simulator formal-code round trip passed for `GB-IPA151I`;
+- legacy compatibility lookup passed for `GB-121-AAA00`.
+
+The controlled substitution of Beacon's temporary live mapper is complete at code, automated-test and simulator level.
