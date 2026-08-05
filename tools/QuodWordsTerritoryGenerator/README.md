@@ -272,3 +272,10 @@ Clean-checkout verification completed on 5 August 2026:
 - builder executed using the declared `quodwords-territory` Conda environment;
 - regenerated candidate checksum matched the frozen release resource;
 - byte-for-byte result: `CLEAN CHECKOUT: IDENTICAL`.
+
+Phase 8 automated verification completed on 5 August 2026:
+
+- Python territory-generator suite: 223 passed;
+- complete Swift test suite executed on the iPhone 17 Pro simulator;
+- xcodebuild exit status: 0;
+- result: `PHASE 8 SWIFT TESTS: PASSED`.
