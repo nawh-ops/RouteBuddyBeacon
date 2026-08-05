@@ -229,3 +229,39 @@ For an out-of-coverage location:
 - its message reports `Unavailable outside coverage` instead of including an invalid QuodWords code.
 
 This behaviour was verified in the iPhone 17 Pro simulator using Paris coordinates and then rechecked after returning to a valid UK location.
+
+### Phase 8 frozen GB resource reproducibility
+
+The frozen GB territory resource can be regenerated as a candidate without
+modifying either the approved release resource or Beacon's bundled copy:
+
+```bash
+~/miniforge3/bin/conda run --no-capture-output \
+  -n quodwords-territory \
+  python \
+  tools/QuodWordsTerritoryGenerator/src/build_gb_territory_resource.py
+
+
+
+Default input:
+
+```text
+tools/QuodWordsTerritoryGenerator/release/GB/gb-coverage-mask.geojson
+```
+
+Default candidate output:
+
+```text
+tools/QuodWordsTerritoryGenerator/output/reproducibility/GB.candidate.qwtr
+```
+
+Verified on 5 August 2026:
+
+- row spans: 53,362;
+- included cells: 433,083,140;
+- maximum public-code count: 439,400,000;
+- file size: 640,408 bytes;
+- SHA-256: `2c1d6975258430574873180d795663894fe659d9f9fe03386e352b60a929488a`;
+- the regenerated candidate was byte-for-byte identical to `release/GB/GB.qwtr`.
+
+The builder writes to the candidate output by default and does not alter the frozen release resource.
