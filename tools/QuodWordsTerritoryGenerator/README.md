@@ -216,3 +216,16 @@ Verification completed on 5 August 2026:
 - legacy compatibility lookup passed for `GB-121-AAA00`.
 
 The controlled substitution of Beacon's temporary live mapper is complete at code, automated-test and simulator level.
+
+### Phase 7 out-of-coverage handling
+
+Beacon now treats coordinates outside the permanent GB QuodWords territory resource as unavailable rather than exposing `INVALID` or `GB-INVALID`.
+
+For an out-of-coverage location:
+
+- the live code display shows `Outside QuodWords coverage`;
+- Send My Location, Copy, Spell and Speak are disabled;
+- Navigate to Me remains available through the Apple Maps coordinate link;
+- its message reports `Unavailable outside coverage` instead of including an invalid QuodWords code.
+
+This behaviour was verified in the iPhone 17 Pro simulator using Paris coordinates and then rechecked after returning to a valid UK location.
