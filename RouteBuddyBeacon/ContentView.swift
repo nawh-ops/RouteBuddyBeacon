@@ -116,6 +116,13 @@ struct ContentView: View {
                             .offset(y: 6)
                         
                         if let fix = locationManager.currentFix {
+                            let liveShortCode = displayedQuodWordsCode.isEmpty
+                                ? QuodWordsEncoder.shortCode(from: fix.coordinate)
+                                : displayedQuodWordsCode
+                            let hasValidQuodWordsCode =
+                                liveShortCode != "INVALID" &&
+                                liveShortCode != "GB-INVALID"
+
                             VStack(spacing: 8) {
                                 VStack(spacing: 6) {
                                     Text("Your QuodWords Location")
@@ -123,21 +130,27 @@ struct ContentView: View {
                                         .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity, alignment: .center)
                                     
-                                    displayQuodWordsCodeView(
-                                        displayedQuodWordsCode.isEmpty
-                                            ? QuodWordsEncoder
-                                                .shortCode(from: fix.coordinate)
-                                            : displayedQuodWordsCode
-                                    )
-                                    .font(
-                                        .system(size: 50,
-                                                weight: .heavy,
-                                                design: .monospaced)
-                                    )
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.85)
-                                    .padding(.vertical, 6)
-                                    .padding(.bottom, 12)
+                                    Group {
+                                        if hasValidQuodWordsCode {
+                                            displayQuodWordsCodeView(liveShortCode)
+                                                .font(
+                                                    .system(size: 50,
+                                                            weight: .heavy,
+                                                            design: .monospaced)
+                                                )
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.85)
+                                                .padding(.vertical, 6)
+                                                .padding(.bottom, 12)
+                                        } else {
+                                            Text("Outside QuodWords coverage")
+                                                .font(.headline)
+                                                .foregroundStyle(.secondary)
+                                                .multilineTextAlignment(.center)
+                                                .padding(.vertical, 18)
+                                                .padding(.bottom, 12)
+                                        }
+                                    }
                                     .onChange(of: locationManager.currentFix?.coordinate.latitude) {
                                         guard let fix = locationManager.currentFix else { return }
                                         let newCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
@@ -153,14 +166,12 @@ struct ContentView: View {
                                         sendLocation()
                                     }
                                     .buttonStyle(.borderedProminent)
+                                    .disabled(!hasValidQuodWordsCode)
                                     .padding(.bottom, 12)
                                     
                                     HStack(spacing: 22) {
                                         Button("Copy") {
-                                            let code = displayedQuodWordsCode.isEmpty
-                                                ? QuodWordsEncoder.shortCode(from: fix.coordinate)
-                                                : displayedQuodWordsCode
-                                            UIPasteboard.general.string = code
+                                            UIPasteboard.general.string = liveShortCode
                                             
                                             let generator = UIImpactFeedbackGenerator(style: .light)
                                             generator.prepare()
@@ -177,25 +188,25 @@ struct ContentView: View {
                                             }
                                         }
                                         .buttonStyle(.borderedProminent)
+                                        .disabled(!hasValidQuodWordsCode)
                                         .font(.footnote)
                                         
                                         Button("Spell") {
                                             showPhoneticCode = true
                                         }
                                         .buttonStyle(.bordered)
+                                        .disabled(!hasValidQuodWordsCode)
                                         .tint(.blue)
                                         .font(.footnote.weight(.semibold))
                                         
                                         Button("Speak") {
-                                            let code = displayedQuodWordsCode.isEmpty
-                                                ? QuodWordsEncoder.shortCode(from: fix.coordinate)
-                                                : displayedQuodWordsCode
-                                            let spoken = phoneticCode(code)
+                                            let spoken = phoneticCode(liveShortCode)
                                                 .replacingOccurrences(of: " ", with: ", ")
                                             
                                             speak(spoken)
                                         }
                                         .buttonStyle(.bordered)
+                                        .disabled(!hasValidQuodWordsCode)
                                         .tint(.blue)
                                         .font(.footnote.weight(.semibold))
                                     }
@@ -992,6 +1003,15 @@ struct ContentView: View {
     }
     
     private func updateStableQuodWordsCode(with newCode: String, coordinate: CLLocationCoordinate2D) {
+        guard newCode != "INVALID",
+              newCode != "GB-INVALID" else {
+            displayedQuodWordsCode = ""
+            displayedQuodWordsCoordinate = nil
+            candidateQuodWordsCode = nil
+            candidateQuodWordsSince = nil
+            return
+        }
+
         if displayedQuodWordsCode.isEmpty {
             displayedQuodWordsCode = newCode
             displayedQuodWordsCoordinate = coordinate
@@ -1050,6 +1070,12 @@ struct ContentView: View {
             QuodWordsEncoder.fullAreaCode(from:
                 fix.coordinate)
 
+        guard shortCode != "INVALID",
+              fullCode != "GB-INVALID" else {
+            pasteStatusMessage = "Location outside QuodWords coverage"
+            return
+        }
+
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
@@ -1102,6 +1128,22 @@ struct ContentView: View {
         let shortCode = QuodWordsEncoder.shortCode(from: coordinate)
         let fullCode = QuodWordsEncoder.fullAreaCode(from: coordinate)
 
+        let quodWordsSection: String
+        if shortCode != "INVALID",
+           fullCode != "GB-INVALID" {
+            quodWordsSection = """
+            QUODWORDS CODE:
+
+            SHORT:
+            \(shortCode)
+
+            LONG:
+            \(fullCode)
+            """
+        } else {
+            quodWordsSection = "QUODWORDS CODE:\nUnavailable outside coverage"
+        }
+
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
@@ -1114,13 +1156,7 @@ struct ContentView: View {
         NAVIGATE TO ME:
         \(mapsURL)
 
-        QUODWORDS CODE:
-
-        SHORT:
-        \(shortCode)
-
-        LONG:
-        \(fullCode)
+        \(quodWordsSection)
 
         GENERATED:
         \(generatedTime)
