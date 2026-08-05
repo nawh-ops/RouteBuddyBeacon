@@ -265,3 +265,10 @@ Verified on 5 August 2026:
 - the regenerated candidate was byte-for-byte identical to `release/GB/GB.qwtr`.
 
 The builder writes to the candidate output by default and does not alter the frozen release resource.
+
+Clean-checkout verification completed on 5 August 2026:
+
+- repository freshly cloned from `quodwords-gb-coverage`;
+- builder executed using the declared `quodwords-territory` Conda environment;
+- regenerated candidate checksum matched the frozen release resource;
+- byte-for-byte result: `CLEAN CHECKOUT: IDENTICAL`.
