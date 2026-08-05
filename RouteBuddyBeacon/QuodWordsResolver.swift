@@ -14,7 +14,7 @@ struct QuodWordsResolver {
 
         // 2. Temporary fallback: try old QuodWords format, e.g.
         //    QW-GB-123-WXW37 or GB-123-WXW37.
-        if let coord = QuodWordsEncoder.decode(cleaned) {
+        if let coord = LegacyQuodWordsDecoder.decode(cleaned) {
             return coord
         }
 
@@ -22,7 +22,7 @@ struct QuodWordsResolver {
         //    using current/live location as context.
         if let referenceCoordinate,
            let coord =
-            QuodWordsEncoder.decodeShortCode(cleaned,
+            LegacyQuodWordsDecoder.decodeShortCode(cleaned,
                                              near: referenceCoordinate) {
             return coord
         }
