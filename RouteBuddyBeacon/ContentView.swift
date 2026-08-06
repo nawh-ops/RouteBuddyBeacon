@@ -5,6 +5,7 @@ import UIKit
 import AVFoundation
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var pasteStatusMessage: String? =
         nil
 
@@ -21,6 +22,9 @@ struct ContentView: View {
         )
     )
     @State private var autoFollow = true
+    @State private var hasCentredOnInitialLocation = false
+    @State private var locationBeforeInactive: CLLocation?
+    @State private var shouldCheckResumeLocation = false
     @State private var showCopiedToast = false
     @State private var pastedCoordinate: CLLocationCoordinate2D?
     @State private var manualInput: String = ""
@@ -96,17 +100,33 @@ struct ContentView: View {
                 .onMapCameraChange(frequency: .continuous) { context in
                     currentGridRegion = context.region
                 }
-                .onMapCameraChange(frequency: .onEnd) { _ in
-                    autoFollow = false
-                }
-                .onAppear { updateCameraForFollowMode() }
-                .onChange(of: autoFollow) { updateCameraForFollowMode() }
-                .onChange(of: locationManager.lastLocation) {
-                    if autoFollow {
-                        updateCameraForFollowMode()
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 2)
+                    .onChanged { _ in
+                        autoFollow = false
                     }
+            )
+            .simultaneousGesture(
+                MagnifyGesture()
+                    .onChanged { _ in
+                        autoFollow = false
+                    }
+            )
+            .onAppear {
+                handleLocationUpdate()
+            }
+            .onChange(of: autoFollow) {
+                if autoFollow {
+                    updateCameraForFollowMode()
                 }
-                
+            }
+            .onChange(of: locationManager.lastLocation) {
+                handleLocationUpdate()
+            }
+            .onChange(of: scenePhase) {
+                handleScenePhaseChange()
+            }
+
                 ScrollView {
                     VStack(alignment: .center, spacing: 16) {
                         Text("RouteBuddy\nBeacon")
@@ -837,34 +857,86 @@ struct ContentView: View {
         }
     }
     private func updateCameraForFollowMode() {
-        guard autoFollow else {
+        guard autoFollow,
+              let fix = locationManager.currentFix else {
             return
         }
-        
-        if let fix = locationManager.currentFix {
-            cameraPosition = .region(
-                MKCoordinateRegion(
-                    center: fix.coordinate,
-                    span: MKCoordinateSpan(
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01
-                    )
-                )
+
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: fix.coordinate,
+                span: currentGridRegion.span
             )
-        }
+        )
     }
-    
+
     private func recenterOnUser() {
-        if let fix = locationManager.currentFix {
-            cameraPosition = .region(
-                MKCoordinateRegion(
-                    center: fix.coordinate,
-                    span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+        guard let fix = locationManager.currentFix else {
+            return
+        }
+
+        autoFollow = true
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: fix.coordinate,
+                span: MKCoordinateSpan(
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005
                 )
             )
+        )
+    }
+
+    private func handleLocationUpdate() {
+        guard scenePhase == .active,
+              locationManager.currentFix != nil else {
+            return
+        }
+
+        if !hasCentredOnInitialLocation {
+            hasCentredOnInitialLocation = true
+            recenterOnUser()
+            return
+        }
+
+        if shouldCheckResumeLocation {
+            guard let previousLocation = locationBeforeInactive,
+                  let currentLocation = locationManager.lastLocation,
+                  currentLocation.timestamp > previousLocation.timestamp else {
+                return
+            }
+
+            shouldCheckResumeLocation = false
+
+            if currentLocation.distance(from: previousLocation) >= 100 {
+                recenterOnUser()
+            }
+
+            return
+        }
+
+        if autoFollow {
+            updateCameraForFollowMode()
         }
     }
-    
+
+    private func handleScenePhaseChange() {
+        switch scenePhase {
+        case .inactive:
+            locationBeforeInactive = locationManager.lastLocation
+
+        case .active:
+            shouldCheckResumeLocation = locationBeforeInactive != nil
+            handleLocationUpdate()
+
+        case .background:
+            break
+
+        @unknown default:
+            break
+        }
+    }
+
     private func pasteQuodWordsFromClipboard() {
         manualInputFocused = false
 
