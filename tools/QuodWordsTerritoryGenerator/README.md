@@ -279,3 +279,14 @@ Phase 8 automated verification completed on 5 August 2026:
 - complete Swift test suite executed on the iPhone 17 Pro simulator;
 - xcodebuild exit status: 0;
 - result: `PHASE 8 SWIFT TESTS: PASSED`.
+
+Phase 8 physical-device verification completed on 5 August 2026:
+
+- development build installed on the test iPhone using a temporary bundle identifier;
+- live QuodWords code changed correctly while moving between cells;
+- Beacon resumed correctly after the phone was locked and unlocked;
+- Copy, Spell and Speak passed;
+- Send My Location opened the expected message;
+- Share Map Link included the Apple Maps link plus short and formal QuodWords codes;
+- the displayed code remained stable while stationary;
+- result: physical-device verification passed.
