@@ -337,6 +337,11 @@ struct ContentView: View {
                                         sendNavigateToMeSMS(using: fix)
                                     }
                                     .buttonStyle(.bordered)
+
+                                    Text("Adds an Apple Maps link to your message so the recipient can navigate to you.")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.top, 4)
@@ -611,7 +616,7 @@ struct ContentView: View {
 
                             In an emergency, contact the emergency services first.
 
-                            **Find Location** – paste or enter a QuodWords code to move the map to that location.
+                            **Find Location** – paste or enter a QuodWords code to centre the map on that location and highlight its cell.
                             """
                         )
                         
