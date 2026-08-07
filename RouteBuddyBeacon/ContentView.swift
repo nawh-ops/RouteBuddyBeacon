@@ -542,7 +542,7 @@ struct ContentView: View {
             locationManager.startUpdatingLocation()
         }
         .sheet(isPresented: $showAboutMiniGuide) {
-            AboutMiniGuideView()
+            AboutMiniGuideView(makeBetaReportURL: { betaReportURL })
         }
         .sheet(isPresented: $locationManager.shouldShowShareSheet, onDismiss: {
             locationManager.exportURLs.removeAll()
@@ -565,6 +565,7 @@ struct ContentView: View {
     
     private struct AboutMiniGuideView: View {
         @Environment(\.dismiss) private var dismiss
+        let makeBetaReportURL: () -> URL?
         
         var body: some View {
             NavigationStack {
@@ -575,6 +576,22 @@ struct ContentView: View {
                         
                         Text("Beacon shows your current location and creates a QuodWords location code that can be copied, spelled, spoken, or shared with someone else.")
                             .font(.body)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("BETA TESTING")
+                            .font(.headline.bold())
+
+                        Button("Send Beta Report") {
+                            if let betaReportURL = makeBetaReportURL() {
+                                UIApplication.shared.open(betaReportURL)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Text("Opens an email to the RouteBuddy Beacon beta team. Review the report and add your comments before sending.")
+                            .font(.body)
+                    }
+
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text("BEACON IS NOT A NAVIGATION APP")
@@ -648,7 +665,7 @@ struct ContentView: View {
                             
                             QuodWords codes identify approximate location cells. They do not guarantee that a location is accessible, safe, on land, or suitable for navigation.
                             
-                            Beacon is not a marine navigation, distress or rescue system.
+                            QuodWords codes may be available in supported coastal waters. This does not make Beacon a marine navigation, distress or rescue system.
                             
                             Do not rely on Beacon as your only navigation or emergency safety tool.
                             
@@ -1254,6 +1271,103 @@ struct ContentView: View {
         }
     }
     
+    private var betaReportURL: URL? {
+        let version =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "Unknown"
+
+        let build =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+            ?? "Unknown"
+
+        var systemInfo = utsname()
+        uname(&systemInfo)
+
+        let hardwareIdentifier =
+            Mirror(reflecting: systemInfo.machine).children.reduce(into: "") { result, element in
+                guard let value = element.value as? Int8, value != 0 else {
+                    return
+                }
+                result.append(Character(UnicodeScalar(UInt8(value))))
+            }
+
+        let deviceModel =
+            ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"]
+            ?? hardwareIdentifier
+
+        let iOSVersion = UIDevice.current.systemVersion
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        formatter.locale = Locale(identifier: "en_GB")
+        formatter.timeZone = .current
+
+        let reportTime = formatter.string(from: Date())
+
+        let locationDetails: String
+
+        if let fix = locationManager.currentFix {
+            let shortCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
+
+            let code =
+                shortCode != "INVALID" && shortCode != "GB-INVALID"
+                ? shortCode
+                : "Unavailable"
+
+            locationDetails = """
+            QuodWords code: \(code)
+            Latitude: \(fix.coordinate.latitude)
+            Longitude: \(fix.coordinate.longitude)
+            Accuracy: \(fix.horizontalAccuracy) m
+            """
+        } else {
+            locationDetails = """
+            QuodWords code: Unavailable
+            Latitude: Unavailable
+            Longitude: Unavailable
+            Accuracy: Unavailable
+            """
+        }
+
+        let body = """
+        TYPE YOUR REPORT HERE:
+
+
+        --------------------------------
+        Please include, if possible:
+        • What happened?
+        • What did you expect to happen?
+        • Can you repeat the problem?
+
+        --------------------------------
+        TECHNICAL DETAILS
+
+        Beacon version: \(version)
+        Build: \(build)
+        Device: \(deviceModel)
+        iOS version: \(iOSVersion)
+        Date and time: \(reportTime)
+
+        \(locationDetails)
+        """
+
+        var components = URLComponents(string: "mailto:beta@routebuddy.com")
+
+        components?.queryItems = [
+            URLQueryItem(
+                name: "subject",
+                value: "RouteBuddy Beacon Beta Report"
+            ),
+            URLQueryItem(
+                name: "body",
+                value: body
+            )
+        ]
+
+        return components?.url
+    }
+
     private var recordingStateText: String {
         switch locationManager.recordingState {
         case .idle:
