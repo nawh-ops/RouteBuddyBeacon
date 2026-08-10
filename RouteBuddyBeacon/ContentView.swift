@@ -1126,8 +1126,21 @@ struct ContentView: View {
             return
         }
 
+        let stabilityDelay: TimeInterval
+        if let speed = locationManager.currentFix?.speed {
+            if speed < 2 {
+                stabilityDelay = 3.0
+            } else if speed < 6 {
+                stabilityDelay = 1.5
+            } else {
+                stabilityDelay = 0.5
+            }
+        } else {
+            stabilityDelay = 3.0
+        }
+
         if let since = candidateQuodWordsSince,
-           Date().timeIntervalSince(since) >= 3 {
+           Date().timeIntervalSince(since) >= stabilityDelay {
             displayedQuodWordsCode = newCode
             displayedQuodWordsCoordinate = coordinate
             candidateQuodWordsCode = nil
@@ -1156,9 +1169,7 @@ struct ContentView: View {
     private func sendLocation() {
         guard let fix = locationManager.currentFix else { return }
         
-        let shortCode = displayedQuodWordsCode.isEmpty
-            ? QuodWordsEncoder.shortCode(from: fix.coordinate)
-            : displayedQuodWordsCode
+        let shortCode = QuodWordsEncoder.shortCode(from: fix.coordinate)
         let readableShortCode = displayShortCode(shortCode)
         let fullCode =
             QuodWordsEncoder.fullAreaCode(from:
